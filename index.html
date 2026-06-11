@@ -1,0 +1,908 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>LottoStat Pro — สถิติหวยไทย</title>
+  <link href="https://fonts.googleapis.com/css2?family=Sarabun:wght@300;400;500;600;700;800&family=Cinzel:wght@600;700&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --bg:         #03030A;
+      --bg-s:       #07070F;
+      --bg-c:       #0B0B16;
+      --bg-c2:      #10101E;
+      --bg-c3:      #161624;
+      --gold:       #C9A84C;
+      --gold-lt:    #E8D4A0;
+      --gold-dk:    #7C6428;
+      --gold-dim:   rgba(201,168,76,.10);
+      --gold-glow:  rgba(201,168,76,.06);
+      --gold-b:     rgba(201,168,76,.22);
+      --plat:       #A8A8BC;
+      --ruby:       #8B1A2E;
+      --ruby-lt:    #C0394F;
+      --ruby-dim:   rgba(139,26,46,.15);
+      --text:       #EDE8E0;
+      --soft:       #9090A8;
+      --dim:        #505060;
+      --border:     #141426;
+      --border-lt:  #1E1E36;
+      --hot:        #E07840;
+      --cold:       #4A8FC0;
+      --r:          10px;
+      --r-lg:       16px;
+    }
+    *,*::before,*::after{margin:0;padding:0;box-sizing:border-box}
+    html{scroll-behavior:smooth}
+    body{
+      font-family:'Sarabun',sans-serif;
+      background:var(--bg);
+      color:var(--text);
+      min-height:100vh;
+      background-image:repeating-linear-gradient(-45deg,rgba(201,168,76,.015) 0,rgba(201,168,76,.015) 1px,transparent 1px,transparent 8px);
+    }
+    ::-webkit-scrollbar{width:4px;height:4px}
+    ::-webkit-scrollbar-track{background:var(--bg)}
+    ::-webkit-scrollbar-thumb{background:var(--gold-dk);border-radius:2px}
+
+    /* Header */
+    .header{position:relative;overflow:hidden;text-align:center;padding:2rem 1.5rem 1.5rem;background:linear-gradient(180deg,#08060E,#050510);border-bottom:1px solid var(--gold-b)}
+    .header::before{content:'';position:absolute;inset:0;background:radial-gradient(ellipse 70% 55% at 50% -10%,rgba(201,168,76,.12),transparent 65%),radial-gradient(ellipse 40% 30% at 20% 110%,rgba(139,26,46,.08),transparent 60%),radial-gradient(ellipse 40% 30% at 80% 110%,rgba(139,26,46,.08),transparent 60%);pointer-events:none}
+    .header::after{content:'◆';position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);font-size:260px;opacity:.018;color:var(--gold);pointer-events:none;line-height:1}
+    .hdr-eye{font-size:.62rem;letter-spacing:5px;text-transform:uppercase;color:var(--gold-dk);margin-bottom:.4rem;position:relative;z-index:1}
+    .hdr-logo{font-family:'Cinzel',serif;font-size:2.3rem;font-weight:700;letter-spacing:4px;background:linear-gradient(135deg,#FDF5DC 5%,var(--gold-lt) 30%,var(--gold) 55%,var(--gold-dk) 85%);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;position:relative;z-index:1}
+    .hdr-div{display:flex;align-items:center;gap:.7rem;justify-content:center;margin:.55rem 0 .45rem;position:relative;z-index:1}
+    .hdr-line{height:1px;width:46px;background:linear-gradient(to right,transparent,var(--gold-dk))}
+    .hdr-line.r{background:linear-gradient(to left,transparent,var(--gold-dk))}
+    .hdr-dia{color:var(--gold-dk);font-size:.5rem}
+    .hdr-sub{font-size:.78rem;color:var(--soft);letter-spacing:1px;position:relative;z-index:1}
+
+    /* Tabs */
+    .tabs{display:flex;background:var(--bg-s);border-bottom:1px solid var(--border);overflow-x:auto;-webkit-overflow-scrolling:touch}
+    .tabs::-webkit-scrollbar{height:0}
+    .tab{flex-shrink:0;padding:.9rem 1.5rem;cursor:pointer;color:var(--dim);font-size:.86rem;font-weight:600;letter-spacing:.5px;border-bottom:2px solid transparent;transition:color .2s,border-color .2s;white-space:nowrap}
+    .tab:hover{color:var(--plat)}
+    .tab.active{color:var(--gold);border-bottom-color:var(--gold)}
+
+    /* Layout */
+    .container{max-width:1380px;margin:0 auto;padding:1.75rem 1.25rem}
+    .tab-pane{display:none}
+    .tab-pane.active{display:block}
+
+    /* Card */
+    .card{background:var(--bg-c);border:1px solid var(--border-lt);border-radius:var(--r);padding:1.4rem 1.5rem;margin-bottom:1.4rem;position:relative;overflow:hidden}
+    .card::before{content:'';position:absolute;top:0;left:0;right:0;height:1px;background:linear-gradient(to right,transparent,var(--gold-b),transparent)}
+    .card-title{font-size:.9rem;font-weight:700;color:var(--gold);margin-bottom:1.1rem;letter-spacing:.5px;display:flex;align-items:center;gap:.5rem}
+
+    /* Grid */
+    .g3{display:grid;grid-template-columns:repeat(3,1fr);gap:1.2rem}
+    .g2{display:grid;grid-template-columns:repeat(2,1fr);gap:1.2rem}
+    @media(max-width:960px){.g3{grid-template-columns:1fr}}
+    @media(max-width:600px){.g2{grid-template-columns:1fr}}
+
+    .page-hdr{display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:.9rem;margin-bottom:1.4rem}
+    .page-hdr h2{font-size:1.15rem;font-weight:700;color:var(--gold-lt);letter-spacing:.5px}
+
+    /* Buttons */
+    .btn{display:inline-flex;align-items:center;gap:.35rem;padding:.52rem 1.2rem;border:none;border-radius:6px;cursor:pointer;font-family:'Sarabun',sans-serif;font-size:.84rem;font-weight:700;letter-spacing:.4px;transition:all .2s}
+    .btn-gold{background:linear-gradient(135deg,var(--gold-dk),var(--gold),#D4B464);color:#080808;box-shadow:0 2px 12px rgba(201,168,76,.25)}
+    .btn-gold:hover{background:linear-gradient(135deg,var(--gold),var(--gold-lt),var(--gold));box-shadow:0 4px 20px rgba(201,168,76,.4);transform:translateY(-1px)}
+    .btn-danger{background:linear-gradient(135deg,var(--ruby),var(--ruby-lt));color:#fff}
+    .btn-danger:hover{opacity:.85}
+    .btn-ghost{background:var(--bg-c2);color:var(--plat);border:1px solid var(--border-lt)}
+    .btn-ghost:hover{background:var(--bg-c3)}
+    .btn-sm{padding:.26rem .65rem;font-size:.75rem}
+
+    /* Table */
+    .tbl-wrap{overflow-x:auto}
+    table{width:100%;border-collapse:collapse}
+    thead th{background:var(--bg-c2);color:var(--gold);padding:.7rem .9rem;font-size:.76rem;font-weight:700;letter-spacing:.8px;text-transform:uppercase;white-space:nowrap;text-align:center;border-bottom:1px solid var(--gold-b)}
+    tbody td{padding:.6rem .85rem;font-size:.85rem;text-align:center;border-bottom:1px solid var(--border);vertical-align:middle}
+    tbody tr:hover td{background:var(--gold-glow)}
+    .bp1{display:inline-block;background:linear-gradient(135deg,rgba(201,168,76,.14),rgba(201,168,76,.05));border:1px solid var(--gold-b);color:var(--gold-lt);border-radius:5px;padding:.18rem .6rem;font-family:'Cinzel',serif;font-size:.92rem;letter-spacing:2px}
+    .bn{display:inline-block;background:var(--bg-c2);border:1px solid var(--border-lt);border-radius:4px;padding:.14rem .42rem;font-family:monospace;font-size:.81rem;font-weight:600;color:var(--plat)}
+    .bb2{background:var(--gold-dim);border-color:var(--gold-b);color:var(--gold);font-size:.88rem}
+    .dot{color:var(--dim);margin:0 .18rem}
+
+    /* Filter row */
+    .frow-top{display:flex;align-items:center;gap:.7rem;margin-bottom:1rem;flex-wrap:wrap}
+    .frow-top input{background:var(--bg-c2);border:1px solid var(--border-lt);border-radius:6px;padding:.48rem .8rem;color:var(--text);font-family:'Sarabun',sans-serif;font-size:.84rem;width:200px;transition:border-color .2s}
+    .frow-top input:focus{outline:none;border-color:var(--gold-dk)}
+    .frow-top input::placeholder{color:var(--dim)}
+    .rec-count{color:var(--soft);font-size:.78rem;margin-left:auto}
+
+    /* Modal */
+    .overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,.92);z-index:300;align-items:center;justify-content:center;padding:1rem;backdrop-filter:blur(4px)}
+    .overlay.open{display:flex}
+    .modal{background:var(--bg-c);border:1px solid var(--gold-b);border-radius:var(--r-lg);padding:2rem;width:100%;max-width:500px;max-height:92vh;overflow-y:auto;box-shadow:0 0 60px rgba(201,168,76,.1);position:relative}
+    .modal::before{content:'';position:absolute;top:0;left:0;right:0;height:1px;background:linear-gradient(to right,transparent,var(--gold),transparent)}
+    .modal-title{font-family:'Cinzel',serif;color:var(--gold);font-size:1.1rem;font-weight:700;margin-bottom:1.4rem;letter-spacing:1px}
+    .fgrp{margin-bottom:1rem}
+    .fgrp label{display:block;color:var(--soft);font-size:.76rem;letter-spacing:.5px;margin-bottom:.38rem;text-transform:uppercase}
+    .fgrp input{width:100%;background:var(--bg-c2);border:1px solid var(--border-lt);border-radius:6px;padding:.58rem .78rem;color:var(--text);font-family:'Sarabun',sans-serif;font-size:.91rem;transition:border-color .2s}
+    .fgrp input:focus{outline:none;border-color:var(--gold-dk)}
+    .frow2{display:grid;grid-template-columns:1fr 1fr;gap:.65rem}
+    .modal-foot{display:flex;justify-content:flex-end;gap:.7rem;margin-top:1.6rem}
+
+    /* Bar chart */
+    .bar-chart{display:flex;align-items:flex-end;gap:.55rem;height:130px;padding-bottom:.2rem}
+    .bar-col{flex:1;display:flex;flex-direction:column;align-items:center;gap:.28rem;height:100%;justify-content:flex-end}
+    .bar-fill{width:100%;background:linear-gradient(to top,var(--gold-dk),var(--gold),var(--gold-lt));border-radius:3px 3px 0 0;min-height:3px;position:relative}
+    .bar-fill::after{content:'';position:absolute;inset:0;background:linear-gradient(to bottom,rgba(255,255,255,.15),transparent);border-radius:inherit}
+    .bar-lbl{font-size:.72rem;color:var(--soft)}
+    .bar-cnt{font-size:.66rem;color:var(--gold-dk);font-weight:700}
+
+    /* Rank list */
+    .rank-list{list-style:none}
+    .rank-list li{display:flex;align-items:center;gap:.62rem;padding:.52rem 0;border-bottom:1px solid var(--border)}
+    .rank-list li:last-child{border:none}
+    .rank-no{color:var(--gold-dk);font-weight:800;width:1.5rem;font-size:.76rem}
+    .freq-bar{flex:1;height:4px;background:var(--border-lt);border-radius:2px;overflow:hidden}
+    .freq-fill{height:100%;background:linear-gradient(to right,var(--gold-dk),var(--gold));border-radius:2px}
+    .freq-cnt{color:var(--gold);font-size:.78rem;font-weight:700;width:4.2rem;text-align:right}
+
+    /* Tags */
+    .tags-wrap{display:flex;flex-wrap:wrap;gap:.42rem}
+    .tag-hot{background:rgba(224,120,64,.12);border:1px solid rgba(224,120,64,.3);color:var(--hot);border-radius:4px;padding:.2rem .52rem;font-size:.77rem;font-weight:700}
+    .tag-cold{background:rgba(74,143,192,.10);border:1px solid rgba(74,143,192,.28);color:var(--cold);border-radius:4px;padding:.2rem .52rem;font-size:.77rem;font-weight:700}
+
+    /* Stat bar */
+    .stat-bar{display:flex;gap:1px;background:var(--border);border-radius:var(--r);overflow:hidden;margin-bottom:1.4rem;flex-wrap:wrap}
+    .sbi{flex:1;min-width:120px;background:var(--bg-c);padding:.85rem 1rem;text-align:center}
+    .sbi-val{font-size:1.2rem;font-weight:800;color:var(--gold);font-family:'Cinzel',serif}
+    .sbi-lbl{font-size:.67rem;color:var(--dim);margin-top:.12rem;letter-spacing:.4px}
+
+    /* Prediction */
+    .pred-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:1.3rem;margin-bottom:1.4rem}
+    @media(max-width:820px){.pred-grid{grid-template-columns:1fr}}
+    .pred-card{background:var(--bg-c);border:1px solid var(--border-lt);border-radius:var(--r-lg);padding:1.6rem 1.4rem;text-align:center;position:relative;overflow:hidden;transition:border-color .3s,box-shadow .3s}
+    .pred-card::before{content:'';position:absolute;top:0;left:0;right:0;height:1px;background:linear-gradient(to right,transparent,var(--gold-b),transparent)}
+    .pred-card:hover{border-color:var(--gold-b);box-shadow:0 0 28px rgba(201,168,76,.08)}
+    .pred-card.feat{border-color:var(--gold-b);background:linear-gradient(145deg,var(--bg-c),#0F0E1A)}
+    .pred-type{font-size:.7rem;color:var(--soft);letter-spacing:2px;text-transform:uppercase;margin-bottom:.55rem}
+    .pred-num{font-family:'Cinzel',serif;font-size:2.6rem;font-weight:700;letter-spacing:5px;background:linear-gradient(135deg,#FDF5DC,var(--gold-lt),var(--gold),var(--gold-dk));-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;padding:.4rem 0;line-height:1.1}
+    .pred-num.sm{font-size:1.9rem;letter-spacing:3px}
+    .pred-desc{font-size:.7rem;color:var(--dim);margin-bottom:.7rem}
+    .conf-row{display:flex;justify-content:space-between;align-items:center;margin:.55rem 0 .28rem;font-size:.78rem}
+    .conf-lbl{color:var(--dim)}
+    .conf-pct{color:var(--gold);font-weight:800}
+    .conf-bar{height:4px;background:var(--border-lt);border-radius:2px;overflow:hidden}
+    .conf-fill{height:100%;background:linear-gradient(to right,var(--gold-dk),var(--gold),var(--gold-lt));border-radius:2px;transition:width 1.2s cubic-bezier(.22,.61,.36,1)}
+    .bkdwn{display:grid;grid-template-columns:repeat(3,1fr);gap:.45rem;margin-top:1rem}
+    .bkd{background:var(--bg-c2);border:1px solid var(--border);border-radius:5px;padding:.42rem}
+    .bkd-v{font-size:.85rem;font-weight:700;color:var(--gold)}
+    .bkd-n{font-size:.62rem;color:var(--dim);margin-top:.08rem}
+    .next-badge{display:inline-flex;align-items:center;gap:.42rem;background:var(--gold-dim);border:1px solid var(--gold-b);border-radius:7px;padding:.48rem .95rem;color:var(--gold-lt);font-size:.83rem;font-weight:600}
+    .btn-update{background:linear-gradient(135deg,#1A3A1A,#224422);color:#6FCF6F;border:1px solid rgba(111,207,111,.35);font-size:.84rem;font-weight:700;padding:.52rem 1.2rem;border-radius:7px;cursor:pointer;font-family:'Sarabun',sans-serif;transition:all .2s;display:inline-flex;align-items:center;gap:.4rem}
+    .btn-update:hover{background:linear-gradient(135deg,#224422,#2D5C2D);box-shadow:0 0 16px rgba(111,207,111,.2);transform:translateY(-1px)}
+    @keyframes flashGreen{0%{box-shadow:0 0 0 rgba(111,207,111,0)}50%{box-shadow:0 0 30px rgba(111,207,111,.5)}100%{box-shadow:0 0 0 rgba(111,207,111,0)}}
+    .flash-success{animation:flashGreen .8s ease}
+    .upd-overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,.92);z-index:400;align-items:center;justify-content:center;padding:1rem;backdrop-filter:blur(4px)}
+    .upd-overlay.open{display:flex}
+    .upd-modal{background:var(--bg-c);border:1px solid rgba(111,207,111,.35);border-radius:var(--r-lg);padding:2rem;width:100%;max-width:500px;max-height:92vh;overflow-y:auto;box-shadow:0 0 60px rgba(111,207,111,.08);position:relative}
+    .upd-modal::before{content:'';position:absolute;top:0;left:0;right:0;height:1px;background:linear-gradient(to right,transparent,rgba(111,207,111,.5),transparent)}
+    .upd-title{font-family:'Cinzel',serif;color:#6FCF6F;font-size:1.1rem;font-weight:700;margin-bottom:.4rem;letter-spacing:1px}
+    .upd-subtitle{color:var(--soft);font-size:.8rem;margin-bottom:1.4rem}
+    .draw-date-display{display:inline-block;background:rgba(111,207,111,.1);border:1px solid rgba(111,207,111,.3);border-radius:6px;padding:.3rem .75rem;font-family:'Cinzel',serif;font-size:1rem;color:#6FCF6F;font-weight:700;letter-spacing:2px;margin-bottom:1rem}
+    .sub-preds{display:flex;gap:.55rem;flex-wrap:wrap}
+    .sub-item{background:var(--bg-c2);border:1px solid var(--border-lt);border-radius:6px;padding:.42rem .8rem;text-align:center;min-width:75px;transition:border-color .2s}
+    .sub-item:hover{border-color:var(--gold-b)}
+    .sub-num{font-family:monospace;font-size:1.05rem;font-weight:700;color:var(--gold)}
+    .sub-pct{font-size:.66rem;color:var(--dim)}
+    .disclaimer{background:var(--ruby-dim);border:1px solid rgba(139,26,46,.3);border-radius:var(--r);padding:1rem 1.4rem;color:rgba(220,180,180,.85);font-size:.8rem;text-align:center;line-height:1.75}
+
+    /* ── YEAR COMPARISON ─────────── */
+    .yr-controls{display:flex;gap:.75rem;align-items:center;flex-wrap:wrap;margin-bottom:1.2rem}
+    .yr-controls select{background:var(--bg-c2);border:1px solid var(--border-lt);border-radius:6px;padding:.45rem .75rem;color:var(--text);font-family:'Sarabun',sans-serif;font-size:.85rem}
+    .yr-controls select:focus{outline:none;border-color:var(--gold-dk)}
+    .yr-label{color:var(--soft);font-size:.82rem}
+
+    /* Heatmap grid */
+    .heatmap-wrap{overflow-x:auto;padding-bottom:.5rem}
+    .heatmap{display:grid;gap:2px;width:max-content}
+    .hm-cell{width:32px;height:24px;border-radius:3px;display:flex;align-items:center;justify-content:center;font-size:.6rem;font-weight:700;cursor:default;transition:opacity .2s}
+    .hm-cell:hover{opacity:.75}
+    .hm-yr-label{font-size:.62rem;color:var(--dim);text-align:center;padding:2px 0;writing-mode:vertical-lr;transform:rotate(180deg);height:44px;display:flex;align-items:center;justify-content:center;width:32px}
+    .hm-row-label{font-family:monospace;font-size:.7rem;color:var(--soft);width:32px;display:flex;align-items:center;justify-content:flex-end;padding-right:6px}
+
+    /* SVG line chart */
+    .chart-wrap{overflow-x:auto;padding:.5rem 0}
+    .svg-chart{display:block}
+    .chart-axis-label{font-family:'Sarabun',sans-serif;fill:var(--soft, #9090A8);font-size:11px}
+    .chart-gridline{stroke:rgba(255,255,255,.06);stroke-width:1}
+    .chart-line{stroke:var(--gold, #C9A84C);stroke-width:2;fill:none;stroke-linejoin:round;stroke-linecap:round}
+    .chart-area{fill:url(#areaGrad);opacity:.35}
+    .chart-dot{fill:var(--gold, #C9A84C);stroke:var(--bg-c, #0B0B16);stroke-width:2}
+    .chart-dot-zero{fill:var(--bg-c3, #161624);stroke:rgba(201,168,76,.3);stroke-width:1}
+
+    /* Number input tracker */
+    .num-tracker{display:flex;gap:.7rem;align-items:center;flex-wrap:wrap;margin-bottom:1rem}
+    .num-tracker input{background:var(--bg-c2);border:1px solid var(--border-lt);border-radius:6px;padding:.45rem .7rem;color:var(--gold);font-family:'Cinzel',serif;font-size:1.1rem;font-weight:700;width:72px;text-align:center;letter-spacing:3px}
+    .num-tracker input:focus{outline:none;border-color:var(--gold-dk)}
+    .num-tracker-result{font-size:.82rem;color:var(--soft)}
+
+    /* Year cards scroll */
+    .yr-cards-scroll{display:flex;gap:.9rem;overflow-x:auto;padding-bottom:.8rem;-webkit-overflow-scrolling:touch}
+    .yr-cards-scroll::-webkit-scrollbar{height:4px}
+    .yr-card{flex-shrink:0;width:160px;background:var(--bg-c2);border:1px solid var(--border-lt);border-radius:var(--r);padding:.9rem;position:relative}
+    .yr-card::before{content:'';position:absolute;top:0;left:0;right:0;height:1px;background:linear-gradient(to right,transparent,var(--gold-b),transparent)}
+    .yr-card-year{font-family:'Cinzel',serif;font-size:.95rem;font-weight:700;color:var(--gold);margin-bottom:.6rem;text-align:center}
+    .yr-card-item{display:flex;justify-content:space-between;align-items:center;padding:.22rem 0;font-size:.76rem;border-bottom:1px solid var(--border)}
+    .yr-card-item:last-child{border:none}
+    .yr-card-num{font-family:monospace;font-weight:700;color:var(--gold-lt)}
+    .yr-card-cnt{color:var(--dim);font-size:.68rem}
+
+    /* Comparison side-by-side */
+    .cmp-grid{display:grid;grid-template-columns:1fr 1fr;gap:1rem}
+    @media(max-width:600px){.cmp-grid{grid-template-columns:1fr}}
+
+    /* Fade animation */
+    @keyframes fadeUp{from{opacity:0;transform:translateY(12px)}to{opacity:1;transform:translateY(0)}}
+    .fade{animation:fadeUp .4s ease both}
+    .d1{animation-delay:.07s}
+    .d2{animation-delay:.14s}
+    .d3{animation-delay:.21s}
+
+    @media(max-width:500px){
+      .hdr-logo{font-size:1.65rem}
+      .container{padding:1rem .85rem}
+      .pred-num{font-size:1.9rem}
+    }
+  </style>
+</head>
+<body>
+
+<header class="header">
+  <div class="hdr-eye">Thailand Government Lottery Office</div>
+  <div class="hdr-logo">LottoStat Pro</div>
+  <div class="hdr-div">
+    <div class="hdr-line"></div>
+    <div class="hdr-dia">◆</div>
+    <div class="hdr-line r"></div>
+  </div>
+  <div class="hdr-sub">ข้อมูลจริงจากสำนักงานสลากกินแบ่งรัฐบาล &nbsp;·&nbsp; 464 งวด (ธ.ค. 2549 – มิ.ย. 2569)</div>
+</header>
+
+<nav class="tabs" id="nav-tabs">
+  <div class="tab active" data-tab="tbl">◈ ตารางสถิติ</div>
+  <div class="tab"        data-tab="ana">◈ วิเคราะห์สถิติ</div>
+  <div class="tab"        data-tab="cmp">◈ เปรียบเทียบรายปี</div>
+  <div class="tab"        data-tab="pre">◈ ทำนายงวดถัดไป</div>
+</nav>
+
+<!-- TAB 1: TABLE -->
+<div id="pane-tbl" class="tab-pane active">
+  <div class="container">
+    <div class="page-hdr">
+      <h2>ผลสลากกินแบ่งรัฐบาล (ข้อมูลจริง)</h2>
+      <button class="btn btn-gold" onclick="openModal()">+ เพิ่มงวดใหม่</button>
+    </div>
+    <div class="frow-top">
+      <input id="search-input" type="text" placeholder="ค้นหาวันที่ หรือตัวเลข…" oninput="renderTable()">
+      <span class="rec-count" id="rec-count"></span>
+    </div>
+    <div class="card" style="padding:0">
+      <div class="tbl-wrap">
+        <table>
+          <thead>
+            <tr>
+              <th>#</th><th>วันที่</th><th>รางวัลที่ 1</th>
+              <th>เลขหน้า 3 ตัว</th><th>เลขท้าย 3 ตัว</th>
+              <th>เลขท้าย 2 ตัว</th><th>จัดการ</th>
+            </tr>
+          </thead>
+          <tbody id="tbody"></tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- TAB 2: ANALYSIS -->
+<div id="pane-ana" class="tab-pane">
+  <div class="container">
+    <div class="page-hdr"><h2>วิเคราะห์สถิติรวมทุกงวด</h2></div>
+    <div class="stat-bar" id="stat-bar"></div>
+    <div class="g3">
+      <div class="card fade">
+        <div class="card-title">▲ เลขท้าย 2 ตัว ออกบ่อยที่สุด</div>
+        <ul class="rank-list" id="rl-b2"></ul>
+      </div>
+      <div class="card fade d1">
+        <div class="card-title">▲ เลขท้าย 3 ตัว ออกบ่อยที่สุด</div>
+        <ul class="rank-list" id="rl-b3"></ul>
+      </div>
+      <div class="card fade d2">
+        <div class="card-title">▲ เลขหน้า 3 ตัว ออกบ่อยที่สุด</div>
+        <ul class="rank-list" id="rl-f3"></ul>
+      </div>
+    </div>
+    <div class="card fade">
+      <div class="card-title">◈ ความถี่ตัวเลข 0–9 ในเลขท้าย 2 ตัว</div>
+      <div class="bar-chart" id="chart-dig"></div>
+    </div>
+    <div class="card fade">
+      <div class="card-title">◈ เลขร้อน / เลขเย็น (12 งวดล่าสุด vs ทั้งหมด)</div>
+      <div class="g2" style="margin-bottom:0">
+        <div>
+          <div style="color:var(--hot);font-weight:700;font-size:.83rem;margin-bottom:.75rem;letter-spacing:.5px">🔥 เลขร้อน — ออกบ่อยใน 12 งวดล่าสุด</div>
+          <div class="tags-wrap" id="tags-hot"></div>
+        </div>
+        <div>
+          <div style="color:var(--cold);font-weight:700;font-size:.83rem;margin-bottom:.75rem;letter-spacing:.5px">❄️ เลขเย็น — ห่างหายนานที่สุด</div>
+          <div class="tags-wrap" id="tags-cold"></div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- TAB 3: YEAR COMPARISON -->
+<div id="pane-cmp" class="tab-pane">
+  <div class="container">
+    <div class="page-hdr"><h2>เปรียบเทียบความน่าจะเป็นรายปี</h2></div>
+
+    <!-- Section 1: Digit heatmap per year -->
+    <div class="card fade">
+      <div class="card-title">◈ Heatmap — ความถี่ตัวเลข 0–9 (เลขท้าย 2 ตัว) แต่ละปี</div>
+      <div style="font-size:.76rem;color:var(--dim);margin-bottom:1rem">แถว = ตัวเลข 0–9 · คอลัมน์ = ปี · สีเข้ม = ออกบ่อย</div>
+      <div class="heatmap-wrap">
+        <div id="heatmap"></div>
+      </div>
+      <div style="display:flex;gap:1rem;align-items:center;margin-top:.8rem">
+        <div style="font-size:.7rem;color:var(--dim)">น้อย</div>
+        <div style="display:flex;gap:2px">
+          <div style="width:16px;height:12px;border-radius:2px;background:rgba(201,168,76,.08)"></div>
+          <div style="width:16px;height:12px;border-radius:2px;background:rgba(201,168,76,.25)"></div>
+          <div style="width:16px;height:12px;border-radius:2px;background:rgba(201,168,76,.48)"></div>
+          <div style="width:16px;height:12px;border-radius:2px;background:rgba(201,168,76,.72)"></div>
+          <div style="width:16px;height:12px;border-radius:2px;background:rgba(201,168,76,.95)"></div>
+        </div>
+        <div style="font-size:.7rem;color:var(--dim)">มาก</div>
+      </div>
+    </div>
+
+    <!-- Section 2: Number tracker -->
+    <div class="card fade d1">
+      <div class="card-title">◈ ติดตามตัวเลข — ความถี่รายปีของเลขท้าย 2 ตัว</div>
+      <div class="num-tracker">
+        <div style="font-size:.82rem;color:var(--soft)">เลือกตัวเลข (00–99):</div>
+        <input id="track-num" type="text" value="78" maxlength="2" oninput="renderTracker()">
+        <div class="num-tracker-result" id="tracker-summary"></div>
+      </div>
+      <div class="chart-wrap" id="tracker-wrap">
+        <svg id="tracker-chart" class="svg-chart" width="714" height="200"></svg>
+      </div>
+    </div>
+
+    <!-- Section 3: Top numbers per year cards -->
+    <div class="card fade d2">
+      <div class="card-title">◈ เลขท้าย 2 ตัว ออกบ่อยที่สุด — แยกรายปี</div>
+      <div class="yr-cards-scroll" id="yr-cards"></div>
+    </div>
+
+    <!-- Section 4: Year vs Year comparison -->
+    <div class="card fade d3">
+      <div class="card-title">◈ เปรียบเทียบ 2 ปี — ความน่าจะเป็นเลขท้าย 2 ตัว</div>
+      <div class="yr-controls">
+        <span class="yr-label">ปีที่ 1:</span>
+        <select id="cmp-yr1"></select>
+        <span class="yr-label">ปีที่ 2:</span>
+        <select id="cmp-yr2"></select>
+        <button class="btn btn-gold btn-sm" onclick="renderYearCompare()">เปรียบเทียบ</button>
+      </div>
+      <div class="cmp-grid" id="cmp-result"></div>
+    </div>
+  </div>
+</div>
+
+<!-- TAB 4: PREDICTION -->
+<div id="pane-pre" class="tab-pane">
+  <div class="container">
+    <div class="page-hdr">
+      <h2>ทำนายงวดถัดไป</h2>
+      <div style="display:flex;align-items:center;gap:.75rem;flex-wrap:wrap">
+        <div class="next-badge">◆ งวดถัดไป: <strong id="next-draw-date">—</strong></div>
+        <button class="btn-update" onclick="openUpdateModal()">🔄 อัปเดตผลงวดนี้</button>
+      </div>
+    </div>
+    <div class="pred-grid" id="pred-cards"></div>
+    <div class="g2">
+      <div class="card fade">
+        <div class="card-title">◈ ตัวเลือกสำรอง — เลขท้าย 2 ตัว (Top 5)</div>
+        <div id="alt-b2" class="sub-preds"></div>
+      </div>
+      <div class="card fade d1">
+        <div class="card-title">◈ ตัวเลือกสำรอง — เลขท้าย 3 ตัว (Top 5)</div>
+        <div id="alt-b3" class="sub-preds"></div>
+      </div>
+    </div>
+    <div class="disclaimer">
+      ⚠ &nbsp;<strong>คำเตือนสำคัญ:</strong>&nbsp; ข้อมูลนี้เป็น<strong>ข้อมูลจริง</strong>จากสำนักงานสลากกินแบ่งรัฐบาล<br>
+      แต่การทำนายยังคงอาศัย<strong>สถิติและความน่าจะเป็น</strong>เท่านั้น — ผลรางวัลเป็นการสุ่มโดยสมบูรณ์<br>
+      เพื่อความบันเทิงและการศึกษาสถิติเท่านั้น &nbsp;·&nbsp; โปรดเล่นด้วยความรับผิดชอบ
+    </div>
+  </div>
+</div>
+
+<!-- UPDATE MODAL -->
+<div class="upd-overlay" id="upd-overlay" onclick="onUpdOvClick(event)">
+  <div class="upd-modal" id="upd-modal">
+    <div class="upd-title">🎯 อัปเดตผลรางวัล</div>
+    <div class="upd-subtitle">กรอกผลรางวัลที่ออกจริง เพื่ออัปเดตฐานข้อมูลและทำนายงวดถัดไป</div>
+    <div class="upd-subtitle" style="margin-bottom:.5rem">งวดวันที่</div>
+    <div class="draw-date-display" id="upd-draw-date">—</div>
+    <div class="fgrp"><label>รางวัลที่ 1 (6 หลัก)</label><input id="u-p1" type="text" placeholder="123456" maxlength="6"></div>
+    <div class="fgrp"><label>เลขหน้า 3 ตัว</label><div class="frow2"><input id="u-fr1" type="text" placeholder="123" maxlength="3"><input id="u-fr2" type="text" placeholder="456" maxlength="3"></div></div>
+    <div class="fgrp"><label>เลขท้าย 3 ตัว</label><div class="frow2"><input id="u-bk1" type="text" placeholder="789" maxlength="3"><input id="u-bk2" type="text" placeholder="012" maxlength="3"></div></div>
+    <div class="fgrp"><label>เลขท้าย 2 ตัว</label><input id="u-b2" type="text" placeholder="45" maxlength="2"></div>
+    <div class="modal-foot">
+      <button class="btn btn-ghost" onclick="closeUpdateModal()">ยกเลิก</button>
+      <button class="btn btn-gold"  onclick="saveUpdate()">💾 บันทึก &amp; ทำนายงวดถัดไป</button>
+    </div>
+  </div>
+</div>
+
+<!-- MODAL -->
+<div class="overlay" id="overlay" onclick="onOvClick(event)">
+  <div class="modal">
+    <div class="modal-title" id="modal-title">เพิ่มข้อมูลงวดใหม่</div>
+    <div class="fgrp"><label>วันที่ (DD/MM/YYYY)</label><input id="f-date" type="text" placeholder="16/06/2569" maxlength="10"></div>
+    <div class="fgrp"><label>รางวัลที่ 1 (6 หลัก)</label><input id="f-p1" type="text" placeholder="123456" maxlength="6"></div>
+    <div class="fgrp"><label>เลขหน้า 3 ตัว</label><div class="frow2"><input id="f-fr1" type="text" placeholder="123" maxlength="3"><input id="f-fr2" type="text" placeholder="456" maxlength="3"></div></div>
+    <div class="fgrp"><label>เลขท้าย 3 ตัว</label><div class="frow2"><input id="f-bk1" type="text" placeholder="789" maxlength="3"><input id="f-bk2" type="text" placeholder="012" maxlength="3"></div></div>
+    <div class="fgrp"><label>เลขท้าย 2 ตัว</label><input id="f-b2" type="text" placeholder="45" maxlength="2"></div>
+    <div class="modal-foot">
+      <button class="btn btn-ghost" onclick="closeModal()">ยกเลิก</button>
+      <button class="btn btn-gold"  onclick="saveEntry()">บันทึก</button>
+    </div>
+  </div>
+</div>
+
+<script>
+'use strict';
+
+/* ── Real data (464 records, 2006-2026) ─────────── */
+const REAL_DATA = [{"date":"30/12/2006","p1":"778584","f3":["164","403"],"b3":["811","971"],"b2":"07","id":1},{"date":"16/01/2007","p1":"838739","f3":["263","293"],"b3":["803","845"],"b2":"54","id":2},{"date":"01/02/2007","p1":"769925","f3":["239","287"],"b3":["865","893"],"b2":"56","id":3},{"date":"16/02/2007","p1":"277859","f3":["384","607"],"b3":["625","979"],"b2":"95","id":4},{"date":"01/03/2007","p1":"742425","f3":["294","801"],"b3":["942","949"],"b2":"61","id":5},{"date":"16/03/2007","p1":"876763","f3":["001","191"],"b3":["350","906"],"b2":"85","id":6},{"date":"01/04/2007","p1":"622780","f3":["022","677"],"b3":["794","814"],"b2":"93","id":7},{"date":"16/04/2007","p1":"405105","f3":["013","522"],"b3":["866","987"],"b2":"63","id":8},{"date":"02/05/2007","p1":"430374","f3":["442","553"],"b3":["729","881"],"b2":"81","id":9},{"date":"16/05/2007","p1":"232897","f3":["585","751"],"b3":["858","924"],"b2":"25","id":10},{"date":"01/06/2007","p1":"836393","f3":["242","433"],"b3":["523","739"],"b2":"05","id":11},{"date":"16/06/2007","p1":"393194","f3":["424","589"],"b3":["907","989"],"b2":"41","id":12},{"date":"01/07/2007","p1":"565151","f3":["146","287"],"b3":["638","949"],"b2":"76","id":13},{"date":"16/07/2007","p1":"527384","f3":["105","183"],"b3":["334","947"],"b2":"77","id":14},{"date":"01/08/2007","p1":"429924","f3":["006","048"],"b3":["885","962"],"b2":"29","id":15},{"date":"16/08/2007","p1":"476207","f3":["234","236"],"b3":["312","424"],"b2":"93","id":16},{"date":"01/09/2007","p1":"331810","f3":["293","505"],"b3":["518","520"],"b2":"69","id":17},{"date":"16/09/2007","p1":"499336","f3":["247","273"],"b3":["604","608"],"b2":"45","id":18},{"date":"01/10/2007","p1":"430667","f3":["090","104"],"b3":["126","667"],"b2":"76","id":19},{"date":"16/10/2007","p1":"032988","f3":["158","663"],"b3":["685","846"],"b2":"48","id":20},{"date":"01/11/2007","p1":"927907","f3":["213","277"],"b3":["524","648"],"b2":"88","id":21},{"date":"16/11/2007","p1":"562481","f3":["130","198"],"b3":["752","844"],"b2":"73","id":22},{"date":"01/12/2007","p1":"113410","f3":["418","485"],"b3":["627","659"],"b2":"18","id":23},{"date":"16/12/2007","p1":"513501","f3":["425","432"],"b3":["460","702"],"b2":"96","id":24},{"date":"30/12/2007","p1":"595411","f3":["267","490"],"b3":["741","787"],"b2":"81","id":25},{"date":"16/01/2008","p1":"556010","f3":["413","548"],"b3":["942","965"],"b2":"81","id":26},{"date":"01/02/2008","p1":"212684","f3":["311","472"],"b3":["732","796"],"b2":"26","id":27},{"date":"16/02/2008","p1":"137054","f3":["344","512"],"b3":["630","892"],"b2":"80","id":28},{"date":"01/03/2008","p1":"936685","f3":["056","085"],"b3":["371","691"],"b2":"05","id":29},{"date":"16/03/2008","p1":"074946","f3":["077","974"],"b3":["085","158"],"b2":"33","id":30},{"date":"01/04/2008","p1":"012653","f3":["124","195"],"b3":["200","586"],"b2":"71","id":31},{"date":"16/04/2008","p1":"982800","f3":["008","043"],"b3":["584","802"],"b2":"64","id":32},{"date":"02/05/2008","p1":"453011","f3":["001","133"],"b3":["001","792"],"b2":"62","id":33},{"date":"16/05/2008","p1":"329231","f3":["193","120"],"b3":["355","214"],"b2":"69","id":34},{"date":"01/06/2008","p1":"414875","f3":["370","666"],"b3":["747","916"],"b2":"35","id":35},{"date":"16/06/2008","p1":"729111","f3":["339","345"],"b3":["639","870"],"b2":"75","id":36},{"date":"01/07/2008","p1":"943671","f3":["096","287"],"b3":["490","523"],"b2":"50","id":37},{"date":"16/07/2008","p1":"257374","f3":["344","401"],"b3":["486","576"],"b2":"41","id":38},{"date":"01/08/2008","p1":"850348","f3":["236","386"],"b3":["408","913"],"b2":"11","id":39},{"date":"16/08/2008","p1":"380377","f3":["161","445"],"b3":["457","744"],"b2":"36","id":40},{"date":"01/09/2008","p1":"695993","f3":["027","206"],"b3":["413","904"],"b2":"09","id":41},{"date":"16/09/2008","p1":"012377","f3":["378","534"],"b3":["557","691"],"b2":"56","id":42},{"date":"01/10/2008","p1":"882911","f3":["204","302"],"b3":["311","395"],"b2":"67","id":43},{"date":"16/10/2008","p1":"431277","f3":["324","526"],"b3":["644","648"],"b2":"98","id":44},{"date":"01/11/2008","p1":"272028","f3":["285","333"],"b3":["421","929"],"b2":"76","id":45},{"date":"16/11/2008","p1":"002612","f3":["068","589"],"b3":["824","877"],"b2":"20","id":46},{"date":"01/12/2008","p1":"205434","f3":["013","260"],"b3":["617","957"],"b2":"05","id":47},{"date":"16/12/2008","p1":"074114","f3":["305","715"],"b3":["803","959"],"b2":"25","id":48},{"date":"30/12/2008","p1":"218596","f3":["094","197"],"b3":["831","984"],"b2":"22","id":49},{"date":"16/01/2009","p1":"743212","f3":["266","800"],"b3":["842","885"],"b2":"25","id":50},{"date":"01/02/2009","p1":"534533","f3":["015","427"],"b3":["660","777"],"b2":"69","id":51},{"date":"16/02/2009","p1":"038730","f3":["115","434"],"b3":["939","961"],"b2":"93","id":52},{"date":"01/03/2009","p1":"553091","f3":["224","238"],"b3":["295","665"],"b2":"67","id":53},{"date":"16/03/2009","p1":"268812","f3":["063","228"],"b3":["424","929"],"b2":"36","id":54},{"date":"01/04/2009","p1":"816578","f3":["044","113"],"b3":["363","572"],"b2":"50","id":55},{"date":"16/04/2009","p1":"368415","f3":["007","179"],"b3":["570","954"],"b2":"33","id":56},{"date":"02/05/2009","p1":"294452","f3":["222","301"],"b3":["549","947"],"b2":"11","id":57},{"date":"16/05/2009","p1":"111411","f3":["362","368"],"b3":["838","892"],"b2":"54","id":58},{"date":"01/06/2009","p1":"777661","f3":["097","240"],"b3":["242","642"],"b2":"26","id":59},{"date":"16/06/2009","p1":"930456","f3":["044","125"],"b3":["179","954"],"b2":"15","id":60},{"date":"01/07/2009","p1":"207542","f3":["107","233"],"b3":["385","799"],"b2":"66","id":61},{"date":"16/07/2009","p1":"000816","f3":["005","177"],"b3":["356","836"],"b2":"94","id":62},{"date":"01/08/2009","p1":"154986","f3":["239","374"],"b3":["421","688"],"b2":"92","id":63},{"date":"16/08/2009","p1":"462933","f3":["292","577"],"b3":["658","843"],"b2":"96","id":64},{"date":"01/09/2009","p1":"015865","f3":["435","446"],"b3":["447","924"],"b2":"32","id":65},{"date":"16/09/2009","p1":"202912","f3":["166","200"],"b3":["353","539"],"b2":"48","id":66},{"date":"01/10/2009","p1":"169387","f3":["255","714"],"b3":["435","249"],"b2":"06","id":67},{"date":"16/10/2009","p1":"258487","f3":["122","135"],"b3":["174","226"],"b2":"00","id":68},{"date":"01/11/2009","p1":"689140","f3":["366","465"],"b3":["642","923"],"b2":"85","id":69},{"date":"16/11/2009","p1":"055986","f3":["072","299"],"b3":["536","952"],"b2":"58","id":70},{"date":"01/12/2009","p1":"776980","f3":["188","252"],"b3":["412","937"],"b2":"59","id":71},{"date":"16/12/2009","p1":"685141","f3":["142","524"],"b3":["694","775"],"b2":"05","id":72},{"date":"30/12/2009","p1":"994304","f3":["337","419"],"b3":["598","993"],"b2":"87","id":73},{"date":"16/01/2010","p1":"073577","f3":["413","459"],"b3":["646","781"],"b2":"67","id":74},{"date":"01/02/2010","p1":"186312","f3":["403","577"],"b3":["694","936"],"b2":"14","id":75},{"date":"16/02/2010","p1":"133707","f3":["026","137"],"b3":["362","985"],"b2":"03","id":76},{"date":"01/03/2010","p1":"215227","f3":["457","627"],"b3":["374","470"],"b2":"97","id":77},{"date":"16/03/2010","p1":"364222","f3":["229","619"],"b3":["756","996"],"b2":"97","id":78},{"date":"01/04/2010","p1":"959517","f3":["040","174"],"b3":["447","663"],"b2":"22","id":79},{"date":"16/04/2010","p1":"211743","f3":["154","285"],"b3":["744","811"],"b2":"96","id":80},{"date":"02/05/2010","p1":"360371","f3":["040","382"],"b3":["517","618"],"b2":"06","id":81},{"date":"16/05/2010","p1":"480012","f3":["008","151"],"b3":["293","770"],"b2":"12","id":82},{"date":"01/06/2010","p1":"444874","f3":["298","374"],"b3":["673","996"],"b2":"81","id":83},{"date":"16/06/2010","p1":"500104","f3":["200","628"],"b3":["681","816"],"b2":"73","id":84},{"date":"01/07/2010","p1":"480239","f3":["450","893"],"b3":["918","961"],"b2":"68","id":85},{"date":"16/07/2010","p1":"180387","f3":["024","219"],"b3":["309","572"],"b2":"34","id":86},{"date":"01/08/2010","p1":"210008","f3":["182","191"],"b3":["727","769"],"b2":"10","id":87},{"date":"16/08/2010","p1":"911097","f3":["448","578"],"b3":["689","986"],"b2":"64","id":88},{"date":"01/09/2010","p1":"354656","f3":["096","570"],"b3":["656","784"],"b2":"11","id":89},{"date":"16/09/2010","p1":"017422","f3":["103","316"],"b3":["431","075"],"b2":"66","id":90},{"date":"01/10/2010","p1":"488372","f3":["003","091"],"b3":["246","996"],"b2":"02","id":91},{"date":"16/10/2010","p1":"621377","f3":["310","385"],"b3":["518","872"],"b2":"42","id":92},{"date":"01/11/2010","p1":"191100","f3":["653","739"],"b3":["801","968"],"b2":"59","id":93},{"date":"16/11/2010","p1":"813993","f3":["129","763"],"b3":["907","979"],"b2":"43","id":94},{"date":"01/12/2010","p1":"181752","f3":["086","470"],"b3":["474","664"],"b2":"09","id":95},{"date":"16/12/2010","p1":"334380","f3":["306","315"],"b3":["529","533"],"b2":"24","id":96},{"date":"30/12/2010","p1":"884112","f3":["153","186"],"b3":["933","936"],"b2":"49","id":97},{"date":"16/01/2011","p1":"281062","f3":["185","227"],"b3":["546","758"],"b2":"23","id":98},{"date":"01/02/2011","p1":"610089","f3":["121","361"],"b3":["432","596"],"b2":"55","id":99},{"date":"16/02/2011","p1":"481746","f3":["384","388"],"b3":["510","535"],"b2":"27","id":100},{"date":"01/03/2011","p1":"656037","f3":["544","357"],"b3":["926","396"],"b2":"97","id":101},{"date":"16/03/2011","p1":"593331","f3":["209","463"],"b3":["737","945"],"b2":"96","id":102},{"date":"01/04/2011","p1":"814931","f3":["723","584"],"b3":["040","036"],"b2":"01","id":103},{"date":"16/04/2011","p1":"825988","f3":["263","213"],"b3":["397","593"],"b2":"44","id":104},{"date":"02/05/2011","p1":"054136","f3":["133","421"],"b3":["524","945"],"b2":"85","id":105},{"date":"16/05/2011","p1":"406417","f3":["044","071"],"b3":["700","889"],"b2":"05","id":106},{"date":"01/06/2011","p1":"562370","f3":["346","556"],"b3":["656","801"],"b2":"46","id":107},{"date":"16/06/2011","p1":"351276","f3":["486","167"],"b3":["162","582"],"b2":"88","id":108},{"date":"01/07/2011","p1":"622953","f3":["390","160"],"b3":["780","463"],"b2":"51","id":109},{"date":"16/07/2011","p1":"116556","f3":["052","227"],"b3":["534","609"],"b2":"12","id":110},{"date":"01/08/2011","p1":"218756","f3":["221","583"],"b3":["660","703"],"b2":"12","id":111},{"date":"16/08/2011","p1":"536960","f3":["814","345"],"b3":["074","005"],"b2":"62","id":112},{"date":"01/09/2011","p1":"724533","f3":["847","021"],"b3":["533","821"],"b2":"85","id":113},{"date":"16/09/2011","p1":"731198","f3":["384","645"],"b3":["812","589"],"b2":"28","id":114},{"date":"01/10/2011","p1":"511052","f3":["104","189"],"b3":["499","957"],"b2":"15","id":115},{"date":"16/10/2011","p1":"955756","f3":["057","329"],"b3":["507","991"],"b2":"83","id":116},{"date":"01/11/2011","p1":"805540","f3":["065","221"],"b3":["380","771"],"b2":"54","id":117},{"date":"16/11/2011","p1":"997777","f3":["425","551"],"b3":["406","993"],"b2":"57","id":118},{"date":"01/12/2011","p1":"408147","f3":["922","253"],"b3":["857","739"],"b2":"02","id":119},{"date":"16/12/2011","p1":"884178","f3":["784","235"],"b3":["295","651"],"b2":"21","id":120},{"date":"30/12/2011","p1":"526402","f3":["168","026"],"b3":["541","597"],"b2":"65","id":121},{"date":"16/01/2012","p1":"451445","f3":["328","150"],"b3":["941","639"],"b2":"81","id":122},{"date":"01/02/2012","p1":"320605","f3":["749","426"],"b3":["498","598"],"b2":"32","id":123},{"date":"16/02/2012","p1":"648684","f3":["906","214"],"b3":["111","420"],"b2":"18","id":124},{"date":"01/03/2012","p1":"222518","f3":["295","135"],"b3":["711","199"],"b2":"79","id":125},{"date":"16/03/2012","p1":"607064","f3":["606","333"],"b3":["573","350"],"b2":"08","id":126},{"date":"01/04/2012","p1":"257562","f3":["581","074"],"b3":["616","332"],"b2":"69","id":127},{"date":"16/04/2012","p1":"583470","f3":["088","216"],"b3":["722","754"],"b2":"62","id":128},{"date":"02/05/2012","p1":"889501","f3":["426","468"],"b3":["589","597"],"b2":"29","id":129},{"date":"16/05/2012","p1":"814418","f3":["101","309"],"b3":["504","902"],"b2":"31","id":130},{"date":"01/06/2012","p1":"882727","f3":["399","576"],"b3":["606","895"],"b2":"38","id":131},{"date":"16/06/2012","p1":"159373","f3":["238","479"],"b3":["547","790"],"b2":"51","id":132},{"date":"01/07/2012","p1":"915900","f3":["530","611"],"b3":["656","715"],"b2":"60","id":133},{"date":"16/07/2012","p1":"904050","f3":["042","159"],"b3":["224","897"],"b2":"11","id":134},{"date":"01/08/2012","p1":"895590","f3":["599","745"],"b3":["796","820"],"b2":"50","id":135},{"date":"16/08/2012","p1":"683877","f3":["032","612"],"b3":["730","775"],"b2":"28","id":136},{"date":"01/09/2012","p1":"329997","f3":["148","598"],"b3":["639","736"],"b2":"07","id":137},{"date":"16/09/2012","p1":"540143","f3":["123","242"],"b3":["752","770"],"b2":"79","id":138},{"date":"01/10/2012","p1":"124025","f3":["291","554"],"b3":["873","940"],"b2":"58","id":139},{"date":"16/10/2012","p1":"281343","f3":["089","152"],"b3":["396","868"],"b2":"28","id":140},{"date":"01/11/2012","p1":"524694","f3":["188","217"],"b3":["285","338"],"b2":"63","id":141},{"date":"16/11/2012","p1":"639500","f3":["560","576"],"b3":["627","804"],"b2":"15","id":142},{"date":"01/12/2012","p1":"110443","f3":["303","434"],"b3":["489","553"],"b2":"43","id":143},{"date":"16/12/2012","p1":"529524","f3":["008","734"],"b3":["745","778"],"b2":"72","id":144},{"date":"30/12/2012","p1":"302358","f3":["126","589"],"b3":["832","864"],"b2":"00","id":145},{"date":"16/01/2013","p1":"820981","f3":["196","334"],"b3":["374","555"],"b2":"08","id":146},{"date":"01/02/2013","p1":"565566","f3":["452","641"],"b3":["695","782"],"b2":"66","id":147},{"date":"16/02/2013","p1":"368257","f3":["657","708"],"b3":["109","386"],"b2":"09","id":148},{"date":"01/03/2013","p1":"976241","f3":["133","721"],"b3":["775","972"],"b2":"37","id":149},{"date":"16/03/2013","p1":"968433","f3":["175","529"],"b3":["860","959"],"b2":"52","id":150},{"date":"01/04/2013","p1":"571688","f3":["170","430"],"b3":["670","725"],"b2":"53","id":151},{"date":"16/04/2013","p1":"843846","f3":["828","834"],"b3":["862","906"],"b2":"86","id":152},{"date":"02/05/2013","p1":"603458","f3":["272","359"],"b3":["516","830"],"b2":"07","id":153},{"date":"16/05/2013","p1":"687125","f3":["034","261"],"b3":["390","945"],"b2":"56","id":154},{"date":"01/06/2013","p1":"935489","f3":["480","713"],"b3":["716","768"],"b2":"90","id":155},{"date":"16/06/2013","p1":"289673","f3":["098","114"],"b3":["390","502"],"b2":"69","id":156},{"date":"01/07/2013","p1":"646905","f3":["075","284"],"b3":["903","904"],"b2":"51","id":157},{"date":"16/07/2013","p1":"566996","f3":["352","210"],"b3":["584","526"],"b2":"86","id":158},{"date":"01/08/2013","p1":"356435","f3":["329","451"],"b3":["718","880"],"b2":"82","id":159},{"date":"16/08/2013","p1":"321327","f3":["201","417"],"b3":["448","945"],"b2":"20","id":160},{"date":"01/09/2013","p1":"548123","f3":["045","281"],"b3":["570","800"],"b2":"05","id":161},{"date":"16/09/2013","p1":"562684","f3":["056","235"],"b3":["574","754"],"b2":"63","id":162},{"date":"01/10/2013","p1":"647882","f3":["028","324"],"b3":["576","650"],"b2":"14","id":163},{"date":"16/10/2013","p1":"963289","f3":["402","529"],"b3":["876","952"],"b2":"60","id":164},{"date":"01/11/2013","p1":"739804","f3":["020","173"],"b3":["256","502"],"b2":"47","id":165},{"date":"16/11/2013","p1":"806925","f3":["069","304"],"b3":["672","753"],"b2":"28","id":166},{"date":"01/12/2013","p1":"168795","f3":["074","734"],"b3":["766","980"],"b2":"27","id":167},{"date":"16/12/2013","p1":"341767","f3":["111","228"],"b3":["742","826"],"b2":"79","id":168},{"date":"30/12/2013","p1":"561072","f3":["275","503"],"b3":["513","750"],"b2":"48","id":169},{"date":"16/01/2014","p1":"306902","f3":["077","149"],"b3":["242","510"],"b2":"52","id":170},{"date":"01/02/2014","p1":"180149","f3":["406","492"],"b3":["888","976"],"b2":"95","id":171},{"date":"16/02/2014","p1":"384245","f3":["074","397"],"b3":["521","530"],"b2":"01","id":172},{"date":"01/03/2014","p1":"906318","f3":["116","537"],"b3":["753","798"],"b2":"35","id":173},{"date":"16/03/2014","p1":"531404","f3":["250","305"],"b3":["400","904"],"b2":"79","id":174},{"date":"01/04/2014","p1":"028866","f3":["186","499"],"b3":["835","938"],"b2":"95","id":175},{"date":"16/04/2014","p1":"153406","f3":["013","344"],"b3":["355","634"],"b2":"26","id":176},{"date":"02/05/2014","p1":"103297","f3":["143","158"],"b3":["673","797"],"b2":"52","id":177},{"date":"16/05/2014","p1":"087523","f3":["112","150"],"b3":["246","505"],"b2":"20","id":178},{"date":"01/06/2014","p1":"781198","f3":["160","324"],"b3":["409","636"],"b2":"18","id":179},{"date":"16/06/2014","p1":"673920","f3":["158","140"],"b3":["639","576"],"b2":"95","id":180},{"date":"01/07/2014","p1":"378477","f3":["123","271"],"b3":["441","864"],"b2":"39","id":181},{"date":"16/07/2014","p1":"468728","f3":["104","944"],"b3":["117","205"],"b2":"45","id":182},{"date":"01/08/2014","p1":"766391","f3":["349","576"],"b3":["623","637"],"b2":"82","id":183},{"date":"16/08/2014","p1":"662842","f3":["187","633"],"b3":["639","912"],"b2":"91","id":184},{"date":"01/09/2014","p1":"856763","f3":["308","477"],"b3":["490","912"],"b2":"22","id":185},{"date":"16/09/2014","p1":"772269","f3":["112","257"],"b3":["342","790"],"b2":"35","id":186},{"date":"01/10/2014","p1":"375615","f3":["086","159"],"b3":["251","520"],"b2":"44","id":187},{"date":"16/10/2014","p1":"656409","f3":["647","784"],"b3":["848","910"],"b2":"94","id":188},{"date":"01/11/2014","p1":"206608","f3":["203","607"],"b3":["855","979"],"b2":"44","id":189},{"date":"16/11/2014","p1":"479804","f3":["179","422"],"b3":["480","709"],"b2":"25","id":190},{"date":"01/12/2014","p1":"480449","f3":["161","380"],"b3":["580","820"],"b2":"11","id":191},{"date":"16/12/2014","p1":"948354","f3":["080","763"],"b3":["775","901"],"b2":"90","id":192},{"date":"30/12/2014","p1":"461704","f3":["535","853"],"b3":["950","982"],"b2":"57","id":193},{"date":"16/01/2015","p1":"244351","f3":["068","398"],"b3":["595","877"],"b2":"74","id":194},{"date":"01/02/2015","p1":"155537","f3":["008","083"],"b3":["286","813"],"b2":"79","id":195},{"date":"16/02/2015","p1":"001864","f3":["103","392"],"b3":["825","843"],"b2":"90","id":196},{"date":"01/03/2015","p1":"240237","f3":["008","031"],"b3":["498","857"],"b2":"34","id":197},{"date":"16/03/2015","p1":"048151","f3":["339","622"],"b3":["623","757"],"b2":"92","id":198},{"date":"01/04/2015","p1":"605704","f3":["557","558"],"b3":["861","962"],"b2":"70","id":199},{"date":"16/04/2015","p1":"506260","f3":["101","164"],"b3":["495","973"],"b2":"38","id":200},{"date":"02/05/2015","p1":"543466","f3":["163","195"],"b3":["366","818"],"b2":"30","id":201},{"date":"16/05/2015","p1":"011421","f3":["484","799"],"b3":["851","928"],"b2":"38","id":202},{"date":"02/06/2015","p1":"388881","f3":["314","700"],"b3":["876","969"],"b2":"65","id":203},{"date":"16/06/2015","p1":"644742","f3":["253","386"],"b3":["429","532"],"b2":"05","id":204},{"date":"01/07/2015","p1":"759049","f3":["081","565"],"b3":["567","814"],"b2":"26","id":205},{"date":"16/07/2015","p1":"121507","f3":["294","461"],"b3":["761","830"],"b2":"49","id":206},{"date":"01/08/2015","p1":"518677","f3":["333","598"],"b3":["648","889"],"b2":"53","id":207},{"date":"16/08/2015","p1":"033363","f3":["227","624"],"b3":["648","781"],"b2":"40","id":208},{"date":"01/09/2015","p1":"021094","f3":["260","403"],"b3":["819","068"],"b2":"89","id":209},{"date":"16/09/2015","p1":"743148","f3":["435","209"],"b3":["375","084"],"b2":"06","id":210},{"date":"01/10/2015","p1":"594825","f3":["175","918"],"b3":["440","799"],"b2":"07","id":211},{"date":"16/10/2015","p1":"968630","f3":["457","134"],"b3":["412","054"],"b2":"62","id":212},{"date":"01/11/2015","p1":"361211","f3":["106","757"],"b3":["166","473"],"b2":"45","id":213},{"date":"16/11/2015","p1":"795283","f3":["241","028"],"b3":["643","802"],"b2":"03","id":214},{"date":"01/12/2015","p1":"915350","f3":["238","181"],"b3":["714","175"],"b2":"78","id":215},{"date":"17/12/2015","p1":"930255","f3":["140","250"],"b3":["094","638"],"b2":"08","id":216},{"date":"30/12/2015","p1":"008217","f3":["246","264"],"b3":["895","596"],"b2":"02","id":217},{"date":"17/01/2016","p1":"304371","f3":["031","532"],"b3":["786","743"],"b2":"50","id":218},{"date":"01/02/2016","p1":"927800","f3":["625","999"],"b3":["054","076"],"b2":"09","id":219},{"date":"16/02/2016","p1":"356364","f3":["699","312"],"b3":["309","535"],"b2":"98","id":220},{"date":"01/03/2016","p1":"439686","f3":["530","426"],"b3":["155","743"],"b2":"06","id":221},{"date":"16/03/2016","p1":"134918","f3":["877","855"],"b3":["973","004"],"b2":"32","id":222},{"date":"01/04/2016","p1":"066720","f3":["546","390"],"b3":["285","852"],"b2":"92","id":223},{"date":"16/04/2016","p1":"221609","f3":["228","008"],"b3":["507","523"],"b2":"87","id":224},{"date":"02/05/2016","p1":"399459","f3":["238","403"],"b3":["671","046"],"b2":"02","id":225},{"date":"16/05/2016","p1":"141737","f3":["975","382"],"b3":["268","087"],"b2":"98","id":226},{"date":"01/06/2016","p1":"511825","f3":["775","111"],"b3":["937","880"],"b2":"14","id":227},{"date":"16/06/2016","p1":"073816","f3":["804","251"],"b3":["749","321"],"b2":"79","id":228},{"date":"01/07/2016","p1":"082460","f3":["169","609"],"b3":["302","173"],"b2":"53","id":229},{"date":"16/07/2016","p1":"449764","f3":["734","552"],"b3":["925","158"],"b2":"55","id":230},{"date":"01/08/2016","p1":"272932","f3":["538","983"],"b3":["871","472"],"b2":"57","id":231},{"date":"16/08/2016","p1":"254004","f3":["966","366"],"b3":["596","631"],"b2":"33","id":232},{"date":"01/09/2016","p1":"638684","f3":["335","334"],"b3":["669","630"],"b2":"62","id":233},{"date":"16/09/2016","p1":"240650","f3":["583","493"],"b3":["160","043"],"b2":"42","id":234},{"date":"01/10/2016","p1":"887102","f3":["280","194"],"b3":["458","017"],"b2":"33","id":235},{"date":"16/10/2016","p1":"571947","f3":["692","885"],"b3":["032","587"],"b2":"98","id":236},{"date":"01/11/2016","p1":"785438","f3":["976","824"],"b3":["752","038"],"b2":"86","id":237},{"date":"16/11/2016","p1":"858383","f3":["682","040"],"b3":["570","558"],"b2":"44","id":238},{"date":"01/12/2016","p1":"086069","f3":["513","873"],"b3":["148","450"],"b2":"77","id":239},{"date":"16/12/2016","p1":"435286","f3":["596","366"],"b3":["716","199"],"b2":"35","id":240},{"date":"30/12/2016","p1":"377712","f3":["890","304"],"b3":["477","769"],"b2":"46","id":241},{"date":"17/01/2017","p1":"145157","f3":["511","663"],"b3":["516","836"],"b2":"25","id":242},{"date":"01/02/2017","p1":"054672","f3":["066","807"],"b3":["426","628"],"b2":"42","id":243},{"date":"16/02/2017","p1":"229116","f3":["464","128"],"b3":["953","375"],"b2":"14","id":244},{"date":"01/03/2017","p1":"978453","f3":["560","450"],"b3":["577","052"],"b2":"78","id":245},{"date":"16/03/2017","p1":"273863","f3":["918","324"],"b3":["941","694"],"b2":"92","id":246},{"date":"01/04/2017","p1":"392785","f3":["057","020"],"b3":["500","709"],"b2":"80","id":247},{"date":"16/04/2017","p1":"816729","f3":["766","973"],"b3":["241","807"],"b2":"40","id":248},{"date":"02/05/2017","p1":"008656","f3":["949","573"],"b3":["773","923"],"b2":"35","id":249},{"date":"16/05/2017","p1":"454891","f3":["396","008"],"b3":["603","490"],"b2":"53","id":250},{"date":"01/06/2017","p1":"053630","f3":["121","218"],"b3":["581","881"],"b2":"61","id":251},{"date":"16/06/2017","p1":"943142","f3":["626","878"],"b3":["740","373"],"b2":"47","id":252},{"date":"01/07/2017","p1":"112360","f3":["226","489"],"b3":["688","005"],"b2":"26","id":253},{"date":"16/07/2017","p1":"820327","f3":["835","584"],"b3":["390","823"],"b2":"87","id":254},{"date":"01/08/2017","p1":"756519","f3":["061","386"],"b3":["787","989"],"b2":"36","id":255},{"date":"16/08/2017","p1":"715431","f3":["115","302"],"b3":["253","945"],"b2":"37","id":256},{"date":"01/09/2017","p1":"143224","f3":["345","679"],"b3":["278","195"],"b2":"65","id":257},{"date":"16/09/2017","p1":"170143","f3":["172","647"],"b3":["340","388"],"b2":"71","id":258},{"date":"01/10/2017","p1":"880714","f3":["611","726"],"b3":["462","952"],"b2":"52","id":259},{"date":"16/10/2017","p1":"413494","f3":["180","971"],"b3":["287","128"],"b2":"86","id":260},{"date":"01/11/2017","p1":"533726","f3":["165","425"],"b3":["485","036"],"b2":"85","id":261},{"date":"16/11/2017","p1":"292391","f3":["961","831"],"b3":["477","628"],"b2":"98","id":262},{"date":"01/12/2017","p1":"451005","f3":["626","303"],"b3":["601","257"],"b2":"33","id":263},{"date":"16/12/2017","p1":"955596","f3":["616","836"],"b3":["290","938"],"b2":"89","id":264},{"date":"30/12/2017","p1":"911234","f3":["495","373"],"b3":["953","504"],"b2":"98","id":265},{"date":"17/01/2018","p1":"203823","f3":["624","799"],"b3":["236","397"],"b2":"50","id":266},{"date":"01/02/2018","p1":"026853","f3":["106","947"],"b3":["181","519"],"b2":"31","id":267},{"date":"16/02/2018","p1":"309915","f3":["007","388"],"b3":["230","748"],"b2":"39","id":268},{"date":"02/03/2018","p1":"759415","f3":["318","870"],"b3":["723","589"],"b2":"29","id":269},{"date":"16/03/2018","p1":"218559","f3":["720","064"],"b3":["205","489"],"b2":"82","id":270},{"date":"01/04/2018","p1":"412073","f3":["131","787"],"b3":["638","924"],"b2":"85","id":271},{"date":"16/04/2018","p1":"739229","f3":["273","654"],"b3":["076","526"],"b2":"60","id":272},{"date":"02/05/2018","p1":"248038","f3":["980","527"],"b3":["225","602"],"b2":"85","id":273},{"date":"16/05/2018","p1":"075629","f3":["357","130"],"b3":["506","047"],"b2":"20","id":274},{"date":"01/06/2018","p1":"988117","f3":["553","310"],"b3":["248","650"],"b2":"95","id":275},{"date":"16/06/2018","p1":"223131","f3":["432","507"],"b3":["132","868"],"b2":"46","id":276},{"date":"01/07/2018","p1":"963623","f3":["901","429"],"b3":["210","217"],"b2":"83","id":277},{"date":"16/07/2018","p1":"596324","f3":["403","530"],"b3":["138","362"],"b2":"27","id":278},{"date":"01/08/2018","p1":"386602","f3":["832","903"],"b3":["549","726"],"b2":"78","id":279},{"date":"16/08/2018","p1":"586117","f3":["670","340"],"b3":["815","591"],"b2":"10","id":280},{"date":"01/09/2018","p1":"734510","f3":["512","464"],"b3":["202","097"],"b2":"26","id":281},{"date":"16/09/2018","p1":"149760","f3":["323","539"],"b3":["155","297"],"b2":"79","id":282},{"date":"01/10/2018","p1":"452643","f3":["726","594"],"b3":["810","561"],"b2":"99","id":283},{"date":"16/10/2018","p1":"200515","f3":["392","186"],"b3":["212","192"],"b2":"93","id":284},{"date":"01/11/2018","p1":"149840","f3":["384","576"],"b3":["046","509"],"b2":"58","id":285},{"date":"16/11/2018","p1":"989903","f3":["471","930"],"b3":["140","876"],"b2":"16","id":286},{"date":"01/12/2018","p1":"021840","f3":["045","307"],"b3":["561","988"],"b2":"67","id":287},{"date":"16/12/2018","p1":"356564","f3":["480","948"],"b3":["297","369"],"b2":"62","id":288},{"date":"30/12/2018","p1":"735867","f3":["031","913"],"b3":["701","884"],"b2":"02","id":289},{"date":"17/01/2019","p1":"197079","f3":["206","412"],"b3":["127","660"],"b2":"65","id":290},{"date":"01/02/2019","p1":"967134","f3":["643","779"],"b3":["197","948"],"b2":"04","id":291},{"date":"16/02/2019","p1":"074824","f3":["881","910"],"b3":["612","879"],"b2":"56","id":292},{"date":"01/03/2019","p1":"345650","f3":["137","999"],"b3":["830","837"],"b2":"65","id":293},{"date":"16/03/2019","p1":"724628","f3":["148","883"],"b3":["154","877"],"b2":"64","id":294},{"date":"01/04/2019","p1":"109767","f3":["888","959"],"b3":["403","975"],"b2":"52","id":295},{"date":"16/04/2019","p1":"570331","f3":["512","930"],"b3":["966","968"],"b2":"23","id":296},{"date":"02/05/2019","p1":"061324","f3":["043","476"],"b3":["374","699"],"b2":"25","id":297},{"date":"16/05/2019","p1":"962526","f3":["669","949"],"b3":["018","828"],"b2":"71","id":298},{"date":"01/06/2019","p1":"516461","f3":["589","713"],"b3":["215","560"],"b2":"46","id":299},{"date":"16/06/2019","p1":"174055","f3":["625","884"],"b3":["127","800"],"b2":"29","id":300},{"date":"01/07/2019","p1":"943647","f3":["239","864"],"b3":["006","375"],"b2":"86","id":301},{"date":"15/07/2019","p1":"369765","f3":["901","355"],"b3":["556","113"],"b2":"88","id":302},{"date":"01/08/2019","p1":"387006","f3":["135","983"],"b3":["562","795"],"b2":"58","id":303},{"date":"16/08/2019","p1":"775476","f3":["149","912"],"b3":["563","580"],"b2":"89","id":304},{"date":"01/09/2019","p1":"798787","f3":["210","847"],"b3":["274","439"],"b2":"20","id":305},{"date":"16/09/2019","p1":"340388","f3":["947","733"],"b3":["925","939"],"b2":"85","id":306},{"date":"01/10/2019","p1":"691197","f3":["392","920"],"b3":["606","797"],"b2":"59","id":307},{"date":"16/10/2019","p1":"812564","f3":["255","625"],"b3":["598","132"],"b2":"15","id":308},{"date":"01/11/2019","p1":"967375","f3":["323","806"],"b3":["021","206"],"b2":"79","id":309},{"date":"16/11/2019","p1":"017223","f3":["164","640"],"b3":["085","194"],"b2":"32","id":310},{"date":"01/12/2019","p1":"453522","f3":["617","261"],"b3":["457","013"],"b2":"81","id":311},{"date":"16/12/2019","p1":"529924","f3":["043","138"],"b3":["555","665"],"b2":"97","id":312},{"date":"30/12/2019","p1":"510541","f3":["116","382"],"b3":["140","250"],"b2":"81","id":313},{"date":"17/01/2020","p1":"491774","f3":["004","132"],"b3":["379","595"],"b2":"68","id":314},{"date":"01/02/2020","p1":"589227","f3":["259","552"],"b3":["927","375"],"b2":"06","id":315},{"date":"16/02/2020","p1":"781403","f3":["952","515"],"b3":["030","918"],"b2":"94","id":316},{"date":"01/03/2020","p1":"875938","f3":["294","328"],"b3":["597","780"],"b2":"98","id":317},{"date":"16/03/2020","p1":"503446","f3":["258","726"],"b3":["404","661"],"b2":"77","id":318},{"date":"16/05/2020","p1":"051095","f3":["285","430"],"b3":["191","364"],"b2":"22","id":319},{"date":"01/06/2020","p1":"831567","f3":["264","489"],"b3":["562","582"],"b2":"24","id":320},{"date":"16/06/2020","p1":"516967","f3":["876","882"],"b3":["565","625"],"b2":"64","id":321},{"date":"01/07/2020","p1":"347258","f3":["095","362"],"b3":["094","307"],"b2":"83","id":322},{"date":"16/07/2020","p1":"873286","f3":["510","533"],"b3":["682","494"],"b2":"53","id":323},{"date":"01/08/2020","p1":"569391","f3":["575","931"],"b3":["578","809"],"b2":"92","id":324},{"date":"16/08/2020","p1":"945811","f3":["712","614"],"b3":["364","733"],"b2":"88","id":325},{"date":"01/09/2020","p1":"999997","f3":["636","725"],"b3":["342","957"],"b2":"98","id":326},{"date":"16/09/2020","p1":"244083","f3":["127","220"],"b3":["623","853"],"b2":"57","id":327},{"date":"01/10/2020","p1":"837893","f3":["594","757"],"b3":["110","595"],"b2":"59","id":328},{"date":"16/10/2020","p1":"286051","f3":["189","464"],"b3":["980","045"],"b2":"38","id":329},{"date":"01/11/2020","p1":"506404","f3":["154","598"],"b3":["062","245"],"b2":"40","id":330},{"date":"16/11/2020","p1":"972661","f3":["368","741"],"b3":["208","255"],"b2":"46","id":331},{"date":"01/12/2020","p1":"100994","f3":["093","776"],"b3":["984","834"],"b2":"84","id":332},{"date":"16/12/2020","p1":"201303","f3":["377","828"],"b3":["072","517"],"b2":"70","id":333},{"date":"30/12/2020","p1":"803628","f3":["336","804"],"b3":["321","924"],"b2":"19","id":334},{"date":"17/01/2021","p1":"384395","f3":["367","653"],"b3":["566","878"],"b2":"15","id":335},{"date":"01/02/2021","p1":"912307","f3":["605","248"],"b3":["282","651"],"b2":"97","id":336},{"date":"16/02/2021","p1":"424603","f3":["861","318"],"b3":["057","817"],"b2":"39","id":337},{"date":"01/03/2021","p1":"835538","f3":["290","838"],"b3":["051","806"],"b2":"73","id":338},{"date":"16/03/2021","p1":"890422","f3":["036","902"],"b3":["396","256"],"b2":"19","id":339},{"date":"01/04/2021","p1":"472270","f3":["755","283"],"b3":["393","577"],"b2":"05","id":340},{"date":"16/04/2021","p1":"100787","f3":["013","143"],"b3":["264","478"],"b2":"56","id":341},{"date":"02/05/2021","p1":"501272","f3":["306","018"],"b3":["498","129"],"b2":"18","id":342},{"date":"16/05/2021","p1":"684579","f3":["615","843"],"b3":["276","970"],"b2":"14","id":343},{"date":"01/06/2021","p1":"292972","f3":["620","193"],"b3":["978","723"],"b2":"45","id":344},{"date":"16/06/2021","p1":"691861","f3":["054","007"],"b3":["447","668"],"b2":"17","id":345},{"date":"01/07/2021","p1":"713517","f3":["794","073"],"b3":["511","414"],"b2":"29","id":346},{"date":"16/07/2021","p1":"556725","f3":["058","174"],"b3":["233","927"],"b2":"70","id":347},{"date":"01/08/2021","p1":"910261","f3":["103","307"],"b3":["004","785"],"b2":"69","id":348},{"date":"16/08/2021","p1":"046750","f3":["421","666"],"b3":["160","355"],"b2":"23","id":349},{"date":"01/09/2021","p1":"114475","f3":["278","302"],"b3":["123","458"],"b2":"79","id":350},{"date":"16/09/2021","p1":"070935","f3":["609","817"],"b3":["379","007"],"b2":"90","id":351},{"date":"01/10/2021","p1":"578171","f3":["285","361"],"b3":["379","449"],"b2":"83","id":352},{"date":"16/10/2021","p1":"386372","f3":["602","964"],"b3":["295","798"],"b2":"38","id":353},{"date":"01/11/2021","p1":"045037","f3":["247","458"],"b3":["331","755"],"b2":"95","id":354},{"date":"16/11/2021","p1":"032761","f3":["648","471"],"b3":["844","245"],"b2":"57","id":355},{"date":"01/12/2021","p1":"077258","f3":["739","740"],"b3":["401","485"],"b2":"82","id":356},{"date":"16/12/2021","p1":"639235","f3":["097","629"],"b3":["476","522"],"b2":"83","id":357},{"date":"30/12/2021","p1":"819068","f3":["591","979"],"b3":["419","547"],"b2":"36","id":358},{"date":"17/01/2022","p1":"880159","f3":["731","786"],"b3":["529","119"],"b2":"92","id":359},{"date":"01/02/2022","p1":"944308","f3":["942","061"],"b3":["509","485"],"b2":"30","id":360},{"date":"17/02/2022","p1":"098597","f3":["085","644"],"b3":["592","816"],"b2":"57","id":361},{"date":"01/03/2022","p1":"061905","f3":["236","834"],"b3":["234","691"],"b2":"07","id":362},{"date":"16/03/2022","p1":"737867","f3":["349","985"],"b3":["989","788"],"b2":"03","id":363},{"date":"01/04/2022","p1":"970618","f3":["738","391"],"b3":["578","870"],"b2":"10","id":364},{"date":"16/04/2022","p1":"395919","f3":["859","289"],"b3":["413","508"],"b2":"58","id":365},{"date":"02/05/2022","p1":"658642","f3":["778","518"],"b3":["041","325"],"b2":"09","id":366},{"date":"16/05/2022","p1":"155012","f3":["247","736"],"b3":["540","236"],"b2":"06","id":367},{"date":"01/06/2022","p1":"319196","f3":["817","679"],"b3":["213","652"],"b2":"02","id":368},{"date":"16/06/2022","p1":"361807","f3":["549","285"],"b3":["228","106"],"b2":"92","id":369},{"date":"01/07/2022","p1":"981417","f3":["287","242"],"b3":["002","542"],"b2":"61","id":370},{"date":"16/07/2022","p1":"620405","f3":["159","834"],"b3":["061","279"],"b2":"53","id":371},{"date":"01/08/2022","p1":"436594","f3":["893","266"],"b3":["447","282"],"b2":"14","id":372},{"date":"16/08/2022","p1":"331583","f3":["271","300"],"b3":["284","876"],"b2":"42","id":373},{"date":"01/09/2022","p1":"929332","f3":["298","725"],"b3":["210","604"],"b2":"83","id":374},{"date":"16/09/2022","p1":"943703","f3":["971","540"],"b3":["631","432"],"b2":"75","id":375},{"date":"01/10/2022","p1":"484669","f3":["206","996"],"b3":["194","278"],"b2":"50","id":376},{"date":"16/10/2022","p1":"613106","f3":["037","158"],"b3":["606","799"],"b2":"15","id":377},{"date":"01/11/2022","p1":"913106","f3":["722","839"],"b3":["343","922"],"b2":"70","id":378},{"date":"16/11/2022","p1":"121789","f3":["722","532"],"b3":["157","973"],"b2":"64","id":379},{"date":"01/12/2022","p1":"375805","f3":["170","786"],"b3":["409","421"],"b2":"08","id":380},{"date":"16/12/2022","p1":"845093","f3":["912","411"],"b3":["855","593"],"b2":"14","id":381},{"date":"30/12/2022","p1":"157196","f3":["007","522"],"b3":["250","425"],"b2":"58","id":382},{"date":"17/01/2023","p1":"812519","f3":["443","389"],"b3":["849","564"],"b2":"47","id":383},{"date":"01/02/2023","p1":"297411","f3":["181","789"],"b3":["101","664"],"b2":"92","id":384},{"date":"16/02/2023","p1":"590417","f3":["195","664"],"b3":["377","523"],"b2":"80","id":385},{"date":"01/03/2023","p1":"417652","f3":["577","919"],"b3":["748","984"],"b2":"55","id":386},{"date":"16/03/2023","p1":"025873","f3":["420","800"],"b3":["355","544"],"b2":"73","id":387},{"date":"01/04/2023","p1":"087907","f3":["111","914"],"b3":["290","698"],"b2":"99","id":388},{"date":"16/04/2023","p1":"984906","f3":["670","678"],"b3":["797","551"],"b2":"71","id":389},{"date":"02/05/2023","p1":"843019","f3":["500","780"],"b3":["269","187"],"b2":"65","id":390},{"date":"16/05/2023","p1":"132903","f3":["739","678"],"b3":["693","731"],"b2":"99","id":391},{"date":"01/06/2023","p1":"125272","f3":["000","681"],"b3":["386","971"],"b2":"09","id":392},{"date":"16/06/2023","p1":"264872","f3":["519","628"],"b3":["202","874"],"b2":"30","id":393},{"date":"01/07/2023","p1":"922605","f3":["281","867"],"b3":["491","947"],"b2":"16","id":394},{"date":"16/07/2023","p1":"169530","f3":["261","384"],"b3":["066","780"],"b2":"62","id":395},{"date":"31/07/2023","p1":"260453","f3":["268","708"],"b3":["387","601"],"b2":"11","id":396},{"date":"16/08/2023","p1":"471782","f3":["431","739"],"b3":["737","742"],"b2":"67","id":397},{"date":"01/09/2023","p1":"915478","f3":["521","596"],"b3":["692","291"],"b2":"91","id":398},{"date":"16/09/2023","p1":"320812","f3":["699","037"],"b3":["344","057"],"b2":"46","id":399},{"date":"01/10/2023","p1":"727202","f3":["355","324"],"b3":["426","615"],"b2":"66","id":400},{"date":"16/10/2023","p1":"931446","f3":["398","167"],"b3":["970","272"],"b2":"44","id":401},{"date":"01/11/2023","p1":"743951","f3":["335","913"],"b3":["019","349"],"b2":"63","id":402},{"date":"16/11/2023","p1":"557990","f3":["346","412"],"b3":["778","961"],"b2":"14","id":403},{"date":"01/12/2023","p1":"251097","f3":["055","265"],"b3":["092","280"],"b2":"91","id":404},{"date":"16/12/2023","p1":"356757","f3":["058","410"],"b3":["584","964"],"b2":"85","id":405},{"date":"30/12/2023","p1":"625544","f3":["600","648"],"b3":["882","456"],"b2":"89","id":406},{"date":"17/01/2024","p1":"105979","f3":["429","931"],"b3":["196","635"],"b2":"61","id":407},{"date":"01/02/2024","p1":"607063","f3":["454","943"],"b3":["544","591"],"b2":"09","id":408},{"date":"16/02/2024","p1":"941395","f3":["056","330"],"b3":["587","375"],"b2":"43","id":409},{"date":"01/03/2024","p1":"253603","f3":["975","900"],"b3":["382","703"],"b2":"79","id":410},{"date":"16/03/2024","p1":"997626","f3":["571","509"],"b3":["794","329"],"b2":"78","id":411},{"date":"01/04/2024","p1":"803481","f3":["122","809"],"b3":["559","947"],"b2":"90","id":412},{"date":"16/04/2024","p1":"943598","f3":["729","727"],"b3":["154","200"],"b2":"79","id":413},{"date":"02/05/2024","p1":"980116","f3":["104","763"],"b3":["634","833"],"b2":"17","id":414},{"date":"16/05/2024","p1":"205690","f3":["885","747"],"b3":["137","070"],"b2":"60","id":415},{"date":"01/06/2024","p1":"530593","f3":["194","364"],"b3":["421","734"],"b2":"42","id":416},{"date":"16/06/2024","p1":"518504","f3":["016","428"],"b3":["426","447"],"b2":"31","id":417},{"date":"01/07/2024","p1":"434503","f3":["839","975"],"b3":["647","778"],"b2":"89","id":418},{"date":"16/07/2024","p1":"367336","f3":["331","011"],"b3":["421","618"],"b2":"21","id":419},{"date":"01/08/2024","p1":"407041","f3":["408","579"],"b3":["622","070"],"b2":"46","id":420},{"date":"16/08/2024","p1":"095867","f3":["212","334"],"b3":["697","728"],"b2":"28","id":421},{"date":"01/09/2024","p1":"199606","f3":["173","220"],"b3":["094","388"],"b2":"94","id":422},{"date":"16/09/2024","p1":"608662","f3":["230","904"],"b3":["008","408"],"b2":"37","id":423},{"date":"01/10/2024","p1":"718665","f3":["053","812"],"b3":["079","566"],"b2":"59","id":424},{"date":"16/10/2024","p1":"482962","f3":["648","561"],"b3":["919","493"],"b2":"00","id":425},{"date":"01/11/2024","p1":"536044","f3":["174","225"],"b3":["063","231"],"b2":"32","id":426},{"date":"16/11/2024","p1":"187221","f3":["036","923"],"b3":["980","547"],"b2":"38","id":427},{"date":"01/12/2024","p1":"669843","f3":["559","626"],"b3":["098","654"],"b2":"61","id":428},{"date":"16/12/2024","p1":"097863","f3":["290","742"],"b3":["339","881"],"b2":"21","id":429},{"date":"02/01/2025","p1":"730209","f3":["446","065"],"b3":["376","297"],"b2":"51","id":430},{"date":"17/01/2025","p1":"807779","f3":["699","961"],"b3":["448","477"],"b2":"23","id":431},{"date":"01/02/2025","p1":"558700","f3":["285","418"],"b3":["824","685"],"b2":"51","id":432},{"date":"16/02/2025","p1":"847377","f3":["268","613"],"b3":["652","001"],"b2":"50","id":433},{"date":"01/03/2025","p1":"818894","f3":["139","530"],"b3":["781","656"],"b2":"54","id":434},{"date":"16/03/2025","p1":"757563","f3":["595","927"],"b3":["457","309"],"b2":"32","id":435},{"date":"01/04/2025","p1":"669687","f3":["635","760"],"b3":["180","666"],"b2":"36","id":436},{"date":"16/04/2025","p1":"266227","f3":["413","254"],"b3":["474","760"],"b2":"85","id":437},{"date":"02/05/2025","p1":"213388","f3":["826","116"],"b3":["167","662"],"b2":"06","id":438},{"date":"16/05/2025","p1":"251309","f3":["109","231"],"b3":["965","631"],"b2":"87","id":439},{"date":"01/06/2025","p1":"559352","f3":["349","134"],"b3":["307","044"],"b2":"20","id":440},{"date":"16/06/2025","p1":"507392","f3":["243","017"],"b3":["299","736"],"b2":"06","id":441},{"date":"01/07/2025","p1":"949246","f3":["680","169"],"b3":["918","261"],"b2":"91","id":442},{"date":"16/07/2025","p1":"245324","f3":["995","171"],"b3":["084","336"],"b2":"26","id":443},{"date":"01/08/2025","p1":"811852","f3":["525","142"],"b3":["891","512"],"b2":"50","id":444},{"date":"16/08/2025","p1":"994865","f3":["247","602"],"b3":["834","989"],"b2":"63","id":445},{"date":"01/09/2025","p1":"506356","f3":["131","012"],"b3":["022","209"],"b2":"31","id":446},{"date":"16/09/2025","p1":"074646","f3":["740","512"],"b3":["308","703"],"b2":"58","id":447},{"date":"01/10/2025","p1":"876978","f3":["843","532"],"b3":["280","605"],"b2":"77","id":448},{"date":"16/10/2025","p1":"059696","f3":["531","955"],"b3":["476","889"],"b2":"61","id":449},{"date":"01/11/2025","p1":"345898","f3":["449","328"],"b3":["111","690"],"b2":"87","id":450},{"date":"16/11/2025","p1":"458145","f3":["242","602"],"b3":["239","389"],"b2":"37","id":451},{"date":"01/12/2025","p1":"461252","f3":["655","389"],"b3":["137","995"],"b2":"22","id":452},{"date":"16/12/2025","p1":"763895","f3":["431","176"],"b3":["014","449"],"b2":"52","id":453},{"date":"02/01/2026","p1":"837706","f3":["694","347"],"b3":["288","765"],"b2":"16","id":454},{"date":"16/01/2026","p1":"878972","f3":["299","815"],"b3":["662","363"],"b2":"02","id":455},{"date":"01/02/2026","p1":"174629","f3":["917","195"],"b3":["408","041"],"b2":"48","id":456},{"date":"16/02/2026","p1":"340563","f3":["527","241"],"b3":["578","169"],"b2":"07","id":457},{"date":"01/03/2026","p1":"820866","f3":["479","054"],"b3":["068","837"],"b2":"06","id":458},{"date":"16/03/2026","p1":"833009","f3":["510","983"],"b3":["439","954"],"b2":"64","id":459},{"date":"01/04/2026","p1":"292514","f3":["406","113"],"b3":["851","098"],"b2":"47","id":460},{"date":"16/04/2026","p1":"309612","f3":["355","108"],"b3":["868","424"],"b2":"77","id":461},{"date":"02/05/2026","p1":"536077","f3":["267","318"],"b3":["065","153"],"b2":"43","id":462},{"date":"16/05/2026","p1":"107387","f3":["091","298"],"b3":["602","716"],"b2":"08","id":463},{"date":"01/06/2026","p1":"173770","f3":["848","415"],"b3":["410","938"],"b2":"95","id":464}];
+
+/* ── State ─────────────────────────── */
+let DB = [], editId = null;
+
+function load() {
+  try { const r = localStorage.getItem('lspro_v4'); DB = r ? JSON.parse(r) : [...REAL_DATA]; }
+  catch { DB = [...REAL_DATA]; }
+}
+function persist() { localStorage.setItem('lspro_v4', JSON.stringify(DB)); }
+
+/* ── Tabs ──────────────────────────── */
+document.getElementById('nav-tabs').addEventListener('click', e => {
+  const t = e.target.closest('.tab'); if (!t) return;
+  const tab = t.dataset.tab;
+  document.querySelectorAll('.tab').forEach(x => x.classList.toggle('active', x === t));
+  ['tbl','ana','cmp','pre'].forEach(id => {
+    document.getElementById('pane-'+id).classList.toggle('active', id === tab);
+  });
+  if (tab === 'ana') renderAnalysis();
+  if (tab === 'cmp') renderComparison();
+  if (tab === 'pre') renderPrediction();
+});
+
+/* ── Helpers ───────────────────────── */
+function freq(arr) { return arr.reduce((m,v)=>{ m[v]=(m[v]||0)+1; return m; }, {}); }
+function topN(fm, n) { return Object.entries(fm).sort((a,b)=>b[1]-a[1]).slice(0,n); }
+function sorted() { return [...DB].sort((a,b)=>a.id-b.id); }
+function byYear() {
+  return sorted().reduce((m,r)=>{ const y=r.date.slice(6); (m[y]=m[y]||[]).push(r); return m; },{});
+}
+
+/* ── Table ─────────────────────────── */
+function renderTable() {
+  const q    = document.getElementById('search-input').value.trim().toLowerCase();
+  const rows = [...DB].sort((a,b)=>b.id-a.id)
+    .filter(r => !q || r.date.includes(q) || r.p1.includes(q) || r.b2.includes(q)
+      || r.b3.some(x=>x.includes(q)) || r.f3.some(x=>x.includes(q)));
+  document.getElementById('rec-count').textContent = rows.length + ' รายการ';
+  document.getElementById('tbody').innerHTML = rows.map((r,i)=>`
+    <tr>
+      <td style="color:var(--dim)">${rows.length-i}</td>
+      <td style="font-weight:600;color:var(--soft)">${r.date}</td>
+      <td><span class="bp1">${r.p1}</span></td>
+      <td><span class="bn">${r.f3[0]}</span><span class="dot">·</span><span class="bn">${r.f3[1]}</span></td>
+      <td><span class="bn">${r.b3[0]}</span><span class="dot">·</span><span class="bn">${r.b3[1]}</span></td>
+      <td><span class="bn bb2">${r.b2}</span></td>
+      <td>
+        <button class="btn btn-gold btn-sm" onclick="openModal(${r.id})">แก้ไข</button>
+        <button class="btn btn-danger btn-sm" onclick="delEntry(${r.id})" style="margin-left:3px">ลบ</button>
+      </td>
+    </tr>`).join('');
+}
+
+/* ── CRUD ──────────────────────────── */
+function openModal(id=null) {
+  editId = id;
+  if (id) {
+    const r = DB.find(x=>x.id===id);
+    document.getElementById('modal-title').textContent = 'แก้ไขข้อมูลงวด';
+    document.getElementById('f-date').value=r.date; document.getElementById('f-p1').value=r.p1;
+    document.getElementById('f-fr1').value=r.f3[0]; document.getElementById('f-fr2').value=r.f3[1];
+    document.getElementById('f-bk1').value=r.b3[0]; document.getElementById('f-bk2').value=r.b3[1];
+    document.getElementById('f-b2').value=r.b2;
+  } else {
+    document.getElementById('modal-title').textContent = 'เพิ่มข้อมูลงวดใหม่';
+    ['f-date','f-p1','f-fr1','f-fr2','f-bk1','f-bk2','f-b2'].forEach(id=>{ document.getElementById(id).value=''; });
+  }
+  document.getElementById('overlay').classList.add('open');
+}
+function closeModal() { document.getElementById('overlay').classList.remove('open'); editId=null; }
+function onOvClick(e) { if (e.target===document.getElementById('overlay')) closeModal(); }
+function saveEntry() {
+  const v={date:document.getElementById('f-date').value.trim(),p1:document.getElementById('f-p1').value.trim(),
+    fr1:document.getElementById('f-fr1').value.trim(),fr2:document.getElementById('f-fr2').value.trim(),
+    bk1:document.getElementById('f-bk1').value.trim(),bk2:document.getElementById('f-bk2').value.trim(),
+    b2:document.getElementById('f-b2').value.trim()};
+  if (Object.values(v).some(x=>!x)) { alert('กรุณากรอกข้อมูลให้ครบ'); return; }
+  const entry={date:v.date,p1:v.p1,f3:[v.fr1,v.fr2],b3:[v.bk1,v.bk2],b2:v.b2};
+  if (editId) { const idx=DB.findIndex(x=>x.id===editId); DB[idx]={...entry,id:editId}; }
+  else DB.push({...entry,id:Math.max(0,...DB.map(x=>x.id))+1});
+  persist(); renderTable(); closeModal();
+}
+function delEntry(id) {
+  if (!confirm('ต้องการลบงวดนี้?')) return;
+  DB=DB.filter(x=>x.id!==id); persist(); renderTable();
+}
+
+/* ── Analysis ─────────────────────── */
+function renderAnalysis() {
+  const s = sorted();
+  const b2f = freq(s.map(d=>d.b2));
+  const allB2 = [...Array(100)].map((_,i)=>i.toString().padStart(2,'0'));
+  const gaps  = allB2.map(n=>{ const li=s.map(d=>d.b2).lastIndexOf(n); return [n,li===-1?9999:s.length-1-li]; });
+  const cold1 = gaps.sort((a,b)=>b[1]-a[1])[0];
+  const top1  = topN(b2f,1)[0];
+
+  document.getElementById('stat-bar').innerHTML = `
+    <div class="sbi"><div class="sbi-val">${s.length}</div><div class="sbi-lbl">งวดทั้งหมด</div></div>
+    <div class="sbi"><div class="sbi-val">${s[0]?.date||'—'}</div><div class="sbi-lbl">งวดแรกในฐานข้อมูล</div></div>
+    <div class="sbi"><div class="sbi-val">${s[s.length-1]?.date||'—'}</div><div class="sbi-lbl">งวดล่าสุด</div></div>
+    <div class="sbi"><div class="sbi-val">${top1?.[0]||'—'}</div><div class="sbi-lbl">เลข 2 ตัวบ่อยสุด (${top1?.[1]||0} ครั้ง)</div></div>
+    <div class="sbi"><div class="sbi-val">${cold1?.[0]||'—'}</div><div class="sbi-lbl">เลขเย็นสุด (${cold1?.[1]===9999?'ไม่เคยออก':cold1?.[1]+' งวด'})</div></div>`;
+
+  renderRankList('rl-b2', freq(s.map(d=>d.b2)), 10);
+  renderRankList('rl-b3', freq(s.flatMap(d=>d.b3)), 10);
+  renderRankList('rl-f3', freq(s.flatMap(d=>d.f3)), 10);
+
+  const digFreq={};
+  for(let i=0;i<=9;i++) digFreq[i]=0;
+  s.map(d=>d.b2.padStart(2,'0')).forEach(n=>[...n].forEach(c=>{digFreq[+c]++;}));
+  const maxDig=Math.max(...Object.values(digFreq));
+  document.getElementById('chart-dig').innerHTML = Object.entries(digFreq).map(([d,c])=>`
+    <div class="bar-col">
+      <div class="bar-cnt">${c}</div>
+      <div class="bar-fill" style="height:${Math.max((c/maxDig)*105,3)}px"></div>
+      <div class="bar-lbl">${d}</div>
+    </div>`).join('');
+
+  const rec12 = s.slice(-12).map(d=>d.b2);
+  const hotM  = freq(rec12);
+  const hot   = Object.entries(hotM).sort((a,b)=>b[1]-a[1]).slice(0,12);
+  const cold  = gaps.sort((a,b)=>b[1]-a[1]).slice(0,12);
+  document.getElementById('tags-hot').innerHTML  = hot.map(([n,c])=>`<span class="tag-hot">${n} <small style="opacity:.65">(${c}x)</small></span>`).join('');
+  document.getElementById('tags-cold').innerHTML = cold.map(([n,g])=>`<span class="tag-cold">${n} <small style="opacity:.65">(${g===9999?'ไม่เคย':g+'งวด'})</small></span>`).join('');
+}
+
+function renderRankList(id, fm, n) {
+  const top=topN(fm,n), max=top[0]?.[1]||1;
+  document.getElementById(id).innerHTML = top.map(([num,cnt],i)=>`
+    <li><span class="rank-no">#${i+1}</span><span class="bn">${num}</span>
+    <div class="freq-bar"><div class="freq-fill" style="width:${(cnt/max)*100}%"></div></div>
+    <span class="freq-cnt">${cnt} ครั้ง</span></li>`).join('');
+}
+
+/* ── YEAR COMPARISON ──────────────── */
+function renderComparison() {
+  const by = byYear();
+  const years = Object.keys(by).sort();
+
+  renderHeatmap(by, years);
+  renderYearCards(by, years);
+  populateYearSelects(years);
+  renderTracker();
+}
+
+/* Digit heatmap per year */
+function renderHeatmap(by, years) {
+  // For each year, count digit frequency in b2
+  const yDigFreq = {};
+  years.forEach(y => {
+    const counts = {};
+    for(let d=0;d<=9;d++) counts[d]=0;
+    by[y].forEach(r => {
+      const s=r.b2.padStart(2,'0');
+      counts[+s[0]]++; counts[+s[1]]++;
+    });
+    yDigFreq[y] = counts;
+  });
+
+  // Find global max for normalization
+  let gMax = 0;
+  Object.values(yDigFreq).forEach(c => Object.values(c).forEach(v => { if(v>gMax) gMax=v; }));
+
+  const cellW = 34, cellH = 26, labelW = 28, headerH = 46;
+  const rows = 10, cols = years.length;
+  const W = labelW + cols*(cellW+2) + 4;
+  const H = headerH + rows*(cellH+2) + 4;
+
+  let html = `<div style="position:relative">`;
+  // Year labels (vertical) — horizontal for space
+  html += `<div style="display:flex;margin-left:${labelW}px;gap:2px;margin-bottom:4px">`;
+  years.forEach(y => {
+    html += `<div style="width:${cellW}px;text-align:center;font-size:.58rem;color:var(--dim);writing-mode:vertical-lr;transform:rotate(180deg);height:${headerH}px;display:flex;align-items:center;justify-content:center">${y}</div>`;
+  });
+  html += '</div>';
+
+  // Rows (digits 0-9)
+  for(let d=0;d<=9;d++) {
+    html += `<div style="display:flex;align-items:center;gap:2px;margin-bottom:2px">`;
+    html += `<div style="width:${labelW}px;text-align:right;padding-right:6px;font-size:.72rem;color:var(--soft);font-family:monospace;font-weight:700">${d}</div>`;
+    years.forEach(y => {
+      const cnt = yDigFreq[y][d];
+      const pct = gMax > 0 ? cnt/gMax : 0;
+      const alpha = Math.max(0.05, pct*0.95);
+      const textCol = pct > 0.5 ? '#080808' : '#C9A84C';
+      html += `<div title="${y} ตัว ${d}: ${cnt} ครั้ง"
+        style="width:${cellW}px;height:${cellH}px;border-radius:3px;background:rgba(201,168,76,${alpha});
+               display:flex;align-items:center;justify-content:center;
+               font-size:.62rem;font-weight:700;color:${textCol};cursor:default">${cnt}</div>`;
+    });
+    html += '</div>';
+  }
+  html += '</div>';
+  document.getElementById('heatmap').innerHTML = html;
+}
+
+/* Year per-year top cards */
+function renderYearCards(by, years) {
+  document.getElementById('yr-cards').innerHTML = [...years].reverse().map(y => {
+    const f = freq(by[y].map(r=>r.b2));
+    const top5 = topN(f, 5);
+    return `<div class="yr-card">
+      <div class="yr-card-year">${y}</div>
+      <div style="font-size:.65rem;color:var(--dim);text-align:center;margin-bottom:.5rem">${by[y].length} งวด</div>
+      ${top5.map(([n,c])=>`<div class="yr-card-item"><span class="yr-card-num">${n}</span><span class="yr-card-cnt">${c}x</span></div>`).join('')}
+    </div>`;
+  }).join('');
+}
+
+/* Populate year select dropdowns */
+function populateYearSelects(years) {
+  const y1 = document.getElementById('cmp-yr1');
+  const y2 = document.getElementById('cmp-yr2');
+  [y1,y2].forEach((el,si) => {
+    el.innerHTML = years.map((y,i)=>`<option value="${y}" ${(si===0&&i===years.length-2)||(si===1&&i===years.length-1)?'selected':''}>${y}</option>`).join('');
+  });
+  renderYearCompare();
+}
+
+/* Number trend SVG chart */
+function renderTracker() {
+  const raw = document.getElementById('track-num').value.trim().padStart(2,'0');
+  const num = raw.slice(-2);
+  const by  = byYear();
+  const years = Object.keys(by).sort();
+  const counts = years.map(y => ({ y, c: by[y].filter(r=>r.b2===num).length, tot: by[y].length }));
+
+  const total = counts.reduce((s,x)=>s+x.c,0);
+  const pct   = ((total/DB.length)*100).toFixed(1);
+  document.getElementById('tracker-summary').textContent =
+    `เลข ${num} ออก ${total} ครั้ง จาก ${DB.length} งวด (${pct}%)  — เฉลี่ย ${(total/years.length).toFixed(1)} ครั้ง/ปี`;
+
+  // SVG
+  const W=Math.max(600, years.length*34), H=200;
+  const padL=36, padR=16, padT=20, padB=40;
+  const chartW=W-padL-padR, chartH=H-padT-padB;
+  const maxC = Math.max(3, ...counts.map(x=>x.c));
+  const xScale = i => padL + (i/(counts.length-1||1))*chartW;
+  const yScale = v => padT + chartH - (v/maxC)*chartH;
+
+  const pts = counts.map((x,i)=>({ x:xScale(i), y:yScale(x.c), c:x.c, yr:x.y }));
+  const polyPts = pts.map(p=>`${p.x},${p.y}`).join(' ');
+  const areaPts = `${pts[0].x},${padT+chartH} ${polyPts} ${pts[pts.length-1].x},${padT+chartH}`;
+
+  // Y gridlines — hardcoded colors (CSS vars unreliable in SVG)
+  let grids='', ylabels='';
+  for(let v=0;v<=maxC;v++) {
+    const y=yScale(v);
+    grids   += `<line x1="${padL}" y1="${y}" x2="${W-padR}" y2="${y}" stroke="rgba(255,255,255,0.07)" stroke-width="1"/>`;
+    ylabels += `<text x="${padL-4}" y="${y+4}" text-anchor="end" font-family="Sarabun,sans-serif" font-size="11" fill="#9090A8">${v}</text>`;
+  }
+
+  // X labels (every 2 years)
+  let xlabels='';
+  counts.forEach((x,i)=>{
+    if(i%2===0 || i===counts.length-1) {
+      xlabels += `<text x="${xScale(i)}" y="${H-6}" text-anchor="middle" font-family="Sarabun,sans-serif" font-size="11" fill="#9090A8">${x.y.slice(2)}</text>`;
+    }
+  });
+
+  // Dots
+  const dots = pts.map(p=>
+    p.c>0
+      ? `<circle cx="${p.x}" cy="${p.y}" r="4.5" fill="#C9A84C" stroke="#0B0B16" stroke-width="2"><title>${p.yr}: ${p.c} ครั้ง</title></circle>`
+      : `<circle cx="${p.x}" cy="${p.y}" r="3" fill="#161624" stroke="rgba(201,168,76,0.3)" stroke-width="1"><title>${p.yr}: 0 ครั้ง</title></circle>`
+  ).join('');
+
+  // Use innerHTML on wrapper div — avoids outerHTML DOM detach issue
+  document.getElementById('tracker-wrap').innerHTML = `
+  <svg id="tracker-chart" class="svg-chart" width="${W}" height="${H}" viewBox="0 0 ${W} ${H}">
+    <defs>
+      <linearGradient id="lgGold${num}" x1="0" y1="0" x2="0" y2="1">
+        <stop offset="0%"   stop-color="#C9A84C" stop-opacity=".5"/>
+        <stop offset="100%" stop-color="#C9A84C" stop-opacity="0"/>
+      </linearGradient>
+    </defs>
+    <rect width="${W}" height="${H}" fill="none"/>
+    ${grids}${ylabels}${xlabels}
+    <polygon points="${areaPts}" fill="url(#lgGold${num})" opacity=".4"/>
+    <polyline points="${polyPts}" stroke="#C9A84C" stroke-width="2.5" fill="none" stroke-linejoin="round" stroke-linecap="round"/>
+    ${dots}
+  </svg>`;
+}
+
+/* Year-vs-Year comparison */
+function renderYearCompare() {
+  const y1 = document.getElementById('cmp-yr1').value;
+  const y2 = document.getElementById('cmp-yr2').value;
+  const by = byYear();
+  const r1 = by[y1]||[], r2 = by[y2]||[];
+  const f1 = freq(r1.map(r=>r.b2)), f2 = freq(r2.map(r=>r.b2));
+  const all = [...new Set([...Object.keys(f1),...Object.keys(f2)])].sort();
+  const maxF1=Math.max(1,...Object.values(f1)), maxF2=Math.max(1,...Object.values(f2));
+
+  const makeCard = (yr, fmap, rows, maxF) => `
+    <div class="card" style="margin-bottom:0">
+      <div class="card-title" style="margin-bottom:.8rem">ปี ${yr} (${rows.length} งวด)</div>
+      ${topN(fmap,10).map(([n,c])=>`
+        <div style="display:flex;align-items:center;gap:.6rem;padding:.3rem 0;border-bottom:1px solid var(--border)">
+          <span class="bn" style="min-width:38px">${n}</span>
+          <div class="freq-bar" style="flex:1"><div class="freq-fill" style="width:${(c/maxF)*100}%"></div></div>
+          <span style="color:var(--gold);font-size:.78rem;font-weight:700;width:3rem;text-align:right">${c} ครั้ง</span>
+          <span style="color:var(--dim);font-size:.68rem;width:3rem">${((c/rows.length)*100).toFixed(0)}%</span>
+        </div>`).join('')}
+    </div>`;
+
+  document.getElementById('cmp-result').innerHTML =
+    makeCard(y1, f1, r1, maxF1) + makeCard(y2, f2, r2, maxF2);
+}
+
+/* ── Prediction engine ─────────────── */
+function posFreqMap(arr, len) {
+  const pf=Array.from({length:len},()=>({}));
+  arr.forEach(s=>{ const p=s.toString().padStart(len,'0'); for(let i=0;i<len;i++) pf[i][p[i]]=(pf[i][p[i]]||0)+1; });
+  return pf;
+}
+function scoreNum(candidate, arr, pf) {
+  const len=candidate.length, n=arr.length;
+  let fScore=0;
+  for(let i=0;i<len;i++) fScore+=(pf[i][candidate[i]]||0)/n;
+  fScore/=len;
+  const li=arr.lastIndexOf(candidate);
+  const gScore=Math.min((li===-1?n+5:n-1-li)/(n+5),1);
+  const last5=arr.slice(-5).map(Number);
+  const med=[...last5].sort((a,b)=>a-b)[Math.floor(last5.length/2)];
+  const pScore=Math.max(0,1-Math.abs(Number(candidate)-med)/Math.pow(10,len)*5);
+  return fScore*0.40+gScore*0.30+pScore*0.30;
+}
+function predict(arr, digits, topK=5) {
+  if(arr.length<3) return [];
+  const padded=arr.map(s=>s.toString().padStart(digits,'0'));
+  const pf=posFreqMap(padded,digits);
+  const pool=Array.from({length:Math.pow(10,digits)},(_,i)=>i.toString().padStart(digits,'0'));
+  return pool.map(c=>({num:c,score:scoreNum(c,padded,pf)}))
+    .sort((a,b)=>b.score-a.score).slice(0,topK)
+    .map(x=>({number:x.num,confidence:Math.min(Math.round(38+x.score*42),80)}));
+}
+function predictP1(arr) {
+  const padded=arr.map(s=>s.toString().padStart(6,'0'));
+  const pf=posFreqMap(padded,6);
+  let res='',sum=0;
+  for(let i=0;i<6;i++){const b=Object.entries(pf[i]).sort((a,b)=>b[1]-a[1])[0];res+=b?b[0]:'0';sum+=b?b[1]/padded.length:0;}
+  return {number:res,confidence:Math.round(34+(sum/6)*28)};
+}
+function renderPrediction() {
+  const nd = calcNextDraw();
+  const el = document.getElementById('next-draw-date');
+  if (el) el.textContent = nd.be;
+  const s=sorted();
+  const b2L=predict(s.map(d=>d.b2),2,5);
+  const b3L=predict(s.flatMap(d=>d.b3),3,5);
+  const p1=predictP1(s.map(d=>d.p1));
+  const cards=[
+    {cls:'feat fade',type:'รางวัลที่ 1',sub:'6 หลัก',pred:p1,desc:'วิเคราะห์ความถี่แต่ละตำแหน่ง (464 งวด)',large:true},
+    {cls:'fade d1',type:'เลขท้าย 3 ตัว',sub:'แนะนำ',pred:b3L[0]||{number:'???',confidence:0},desc:'ความถี่ 40% + ช่วงห่าง 30% + Pattern 30%'},
+    {cls:'fade d2',type:'เลขท้าย 2 ตัว',sub:'แนะนำ',pred:b2L[0]||{number:'??',confidence:0},desc:'ความถี่ 40% + ช่วงห่าง 30% + Pattern 30%'},
+  ];
+  document.getElementById('pred-cards').innerHTML=cards.map(c=>`
+    <div class="pred-card ${c.cls}">
+      <div class="pred-type">${c.type} <span style="color:var(--gold-dk)">— ${c.sub}</span></div>
+      <div class="pred-num${c.large?'':' sm'}">${c.pred.number}</div>
+      <div class="pred-desc">${c.desc}</div>
+      <div class="conf-row"><span class="conf-lbl">ความน่าจะเป็น</span><span class="conf-pct">${c.pred.confidence}%</span></div>
+      <div class="conf-bar"><div class="conf-fill" style="width:${c.pred.confidence}%"></div></div>
+      <div class="bkdwn">
+        <div class="bkd"><div class="bkd-v">40%</div><div class="bkd-n">ความถี่</div></div>
+        <div class="bkd"><div class="bkd-v">30%</div><div class="bkd-n">ช่วงห่าง</div></div>
+        <div class="bkd"><div class="bkd-v">30%</div><div class="bkd-n">Pattern</div></div>
+      </div>
+    </div>`).join('');
+  document.getElementById('alt-b2').innerHTML=b2L.map((x,i)=>`<div class="sub-item"><div class="sub-num">${x.number}</div><div class="sub-pct">${x.confidence}% · #${i+1}</div></div>`).join('');
+  document.getElementById('alt-b3').innerHTML=b3L.map((x,i)=>`<div class="sub-item"><div class="sub-num">${x.number}</div><div class="sub-pct">${x.confidence}% · #${i+1}</div></div>`).join('');
+}
+
+/* ── Next Draw Calculator ─────────── */
+function calcNextDraw() {
+  const s = sorted();
+  if (!s.length) return { ce: '16/06/2026', be: '16/06/2569' };
+  const last = s[s.length - 1];
+  const parts = last.date.split('/');
+  const day   = parseInt(parts[0], 10);
+  const mon   = parseInt(parts[1], 10);
+  const yr    = parseInt(parts[2], 10);
+  let nd, nm, ny;
+  if (day <= 10) {
+    nd = 16; nm = mon; ny = yr;
+  } else {
+    nd = 1;
+    if (mon === 12) { nm = 1; ny = yr + 1; }
+    else            { nm = mon + 1; ny = yr; }
+  }
+  const p = n => String(n).padStart(2,'0');
+  return { ce: `${p(nd)}/${p(nm)}/${ny}`, be: `${p(nd)}/${p(nm)}/${ny + 543}` };
+}
+
+/* ── Update Modal ─────────────────── */
+function openUpdateModal() {
+  const nd = calcNextDraw();
+  document.getElementById('upd-draw-date').textContent = nd.be;
+  // clear fields
+  ['u-p1','u-fr1','u-fr2','u-bk1','u-bk2','u-b2'].forEach(id => document.getElementById(id).value = '');
+  document.getElementById('upd-overlay').classList.add('open');
+}
+function closeUpdateModal() {
+  document.getElementById('upd-overlay').classList.remove('open');
+}
+function onUpdOvClick(e) {
+  if (e.target === document.getElementById('upd-overlay')) closeUpdateModal();
+}
+function saveUpdate() {
+  const nd = calcNextDraw();
+  const v = {
+    date: nd.ce,
+    p1:   document.getElementById('u-p1').value.trim(),
+    fr1:  document.getElementById('u-fr1').value.trim(),
+    fr2:  document.getElementById('u-fr2').value.trim(),
+    bk1:  document.getElementById('u-bk1').value.trim(),
+    bk2:  document.getElementById('u-bk2').value.trim(),
+    b2:   document.getElementById('u-b2').value.trim()
+  };
+  if (!v.p1 || v.p1.length !== 6) { alert('กรุณากรอกรางวัลที่ 1 (6 หลัก)'); return; }
+  if (!v.fr1 || v.fr1.length !== 3 || !v.fr2 || v.fr2.length !== 3) { alert('กรุณากรอกเลขหน้า 3 ตัวให้ครบทั้ง 2 ชุด'); return; }
+  if (!v.bk1 || v.bk1.length !== 3 || !v.bk2 || v.bk2.length !== 3) { alert('กรุณากรอกเลขท้าย 3 ตัวให้ครบทั้ง 2 ชุด'); return; }
+  if (!v.b2 || v.b2.length !== 2) { alert('กรุณากรอกเลขท้าย 2 ตัว'); return; }
+  const entry = { date: v.date, p1: v.p1, f3: [v.fr1, v.fr2], b3: [v.bk1, v.bk2], b2: v.b2,
+    id: Math.max(0, ...DB.map(x => x.id)) + 1 };
+  DB.push(entry);
+  persist();
+  renderTable();
+  closeUpdateModal();
+  // Flash success on the update button and re-render prediction
+  const btn = document.querySelector('.btn-update');
+  if (btn) { btn.classList.add('flash-success'); setTimeout(() => btn.classList.remove('flash-success'), 900); }
+  renderPrediction();
+}
+
+/* ── Init ──────────────────────────── */
+load();
+renderTable();
+</script>
+</body>
+</html>
