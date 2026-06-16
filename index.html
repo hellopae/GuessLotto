@@ -775,15 +775,25 @@ function renderYearCompare() {
 }
 
 /* ── Prediction engine ─────────────── */
+/* Recency weighting: งวดล่าสุดมีน้ำหนักมากกว่างวดเก่า (half-life ≈ 23 งวด ≈ 1 ปี)
+   ทำให้คำทำนายสะท้อนแนวโน้มปัจจุบัน และขยับทุกครั้งที่อัปเดตผลใหม่ */
+const REC_DECAY = 0.97;
+function recWeight(idx, n) { return Math.pow(REC_DECAY, n - 1 - idx); }
+function totalWeight(n) { return (1 - Math.pow(REC_DECAY, n)) / (1 - REC_DECAY); }
 function posFreqMap(arr, len) {
   const pf=Array.from({length:len},()=>({}));
-  arr.forEach(s=>{ const p=s.toString().padStart(len,'0'); for(let i=0;i<len;i++) pf[i][p[i]]=(pf[i][p[i]]||0)+1; });
+  const n=arr.length;
+  arr.forEach((s,idx)=>{
+    const w=recWeight(idx,n);
+    const p=s.toString().padStart(len,'0');
+    for(let i=0;i<len;i++) pf[i][p[i]]=(pf[i][p[i]]||0)+w;
+  });
   return pf;
 }
-function scoreNum(candidate, arr, pf) {
+function scoreNum(candidate, arr, pf, W) {
   const len=candidate.length, n=arr.length;
   let fScore=0;
-  for(let i=0;i<len;i++) fScore+=(pf[i][candidate[i]]||0)/n;
+  for(let i=0;i<len;i++) fScore+=(pf[i][candidate[i]]||0)/W;
   fScore/=len;
   const li=arr.lastIndexOf(candidate);
   const gScore=Math.min((li===-1?n+5:n-1-li)/(n+5),1);
@@ -796,16 +806,18 @@ function predict(arr, digits, topK=5) {
   if(arr.length<3) return [];
   const padded=arr.map(s=>s.toString().padStart(digits,'0'));
   const pf=posFreqMap(padded,digits);
+  const W=totalWeight(padded.length);
   const pool=Array.from({length:Math.pow(10,digits)},(_,i)=>i.toString().padStart(digits,'0'));
-  return pool.map(c=>({num:c,score:scoreNum(c,padded,pf)}))
+  return pool.map(c=>({num:c,score:scoreNum(c,padded,pf,W)}))
     .sort((a,b)=>b.score-a.score).slice(0,topK)
     .map(x=>({number:x.num,confidence:Math.min(Math.round(38+x.score*42),80)}));
 }
 function predictP1(arr) {
   const padded=arr.map(s=>s.toString().padStart(6,'0'));
   const pf=posFreqMap(padded,6);
+  const W=totalWeight(padded.length);
   let res='',sum=0;
-  for(let i=0;i<6;i++){const b=Object.entries(pf[i]).sort((a,b)=>b[1]-a[1])[0];res+=b?b[0]:'0';sum+=b?b[1]/padded.length:0;}
+  for(let i=0;i<6;i++){const b=Object.entries(pf[i]).sort((a,b)=>b[1]-a[1])[0];res+=b?b[0]:'0';sum+=b?b[1]/W:0;}
   return {number:res,confidence:Math.round(34+(sum/6)*28)};
 }
 function renderPrediction() {
