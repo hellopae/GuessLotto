@@ -191,6 +191,39 @@
     .sub-pct{font-size:.66rem;color:var(--dim)}
     .disclaimer{background:var(--ruby-dim);border:1px solid rgba(139,26,46,.3);border-radius:var(--r);padding:1rem 1.4rem;color:rgba(220,180,180,.85);font-size:.8rem;text-align:center;line-height:1.75}
 
+    /* ── Interactive factor chart ─────────── */
+    .bkdwn5{grid-template-columns:repeat(4,1fr);gap:.35rem}
+    .bkdwn5 .bkd{padding:.4rem .2rem}
+    .bkdwn5 .bkd-n{font-size:.6rem}
+    .chart-toggle{display:flex;gap:.5rem;margin-bottom:1rem}
+    .ctg{background:var(--bg-c2);border:1px solid var(--border-lt);color:var(--soft);padding:.4rem 1rem;border-radius:6px;cursor:pointer;font-family:'Sarabun',sans-serif;font-size:.82rem;font-weight:600;transition:all .2s}
+    .ctg:hover{color:var(--plat)}
+    .ctg.active{background:var(--gold-dim);border-color:var(--gold-b);color:var(--gold-lt)}
+    .factor-legend{display:flex;flex-wrap:wrap;gap:.9rem;margin-bottom:1rem}
+    .lg-item{display:inline-flex;align-items:center;gap:.35rem;font-size:.72rem;color:var(--soft)}
+    .lg-dot{width:10px;height:10px;border-radius:2px;flex-shrink:0}
+    .factor-chart{display:flex;flex-direction:column;gap:.55rem;margin-bottom:1.2rem}
+    .fc-row{display:flex;align-items:center;gap:.7rem;cursor:pointer;padding:.35rem .5rem;border-radius:7px;border:1px solid transparent;transition:all .18s}
+    .fc-row:hover{background:var(--bg-c2)}
+    .fc-row.sel{background:var(--bg-c2);border-color:var(--gold-b)}
+    .fc-rank{font-size:.68rem;color:var(--dim);width:1.8rem;flex-shrink:0}
+    .fc-num{font-family:monospace;font-size:1.05rem;font-weight:700;color:var(--gold-lt);width:3rem;flex-shrink:0;text-align:center}
+    .fc-track{flex:1;height:22px;background:var(--bg);border-radius:5px;overflow:hidden}
+    .fc-bar{display:flex;height:100%;border-radius:5px;overflow:hidden;transition:width .6s ease}
+    .fseg{height:100%;transition:width .6s ease}
+    .fc-pct{font-size:.82rem;font-weight:700;color:var(--gold);width:3rem;text-align:right;flex-shrink:0}
+    .fc-empty{color:var(--dim);font-size:.85rem;text-align:center;padding:1.5rem}
+    .factor-detail{background:var(--bg-c2);border:1px solid var(--border-lt);border-radius:var(--r);padding:1rem 1.2rem}
+    .fd-head{font-size:.84rem;color:var(--gold-lt);margin-bottom:.8rem;font-weight:600}
+    .fd-head strong{font-family:monospace;color:var(--gold);font-size:1rem}
+    .fd-row{display:flex;align-items:center;gap:.7rem;padding:.28rem 0}
+    .fd-lbl{display:inline-flex;align-items:center;gap:.4rem;font-size:.76rem;color:var(--text);width:6.5rem;flex-shrink:0}
+    .fd-track{flex:1;height:8px;background:var(--bg);border-radius:4px;overflow:hidden}
+    .fd-fill{height:100%;border-radius:4px;transition:width .6s ease}
+    .fd-val{font-size:.76rem;font-weight:700;color:var(--text);width:2.6rem;text-align:right;flex-shrink:0}
+    .fd-contrib{font-size:.66rem;color:var(--dim);width:4.5rem;text-align:right;flex-shrink:0}
+    @media(max-width:600px){.fd-lbl{width:5rem;font-size:.72rem}.fd-contrib{display:none}.fc-num{font-size:.95rem;width:2.6rem}}
+
     /* ── YEAR COMPARISON ─────────── */
     .yr-controls{display:flex;gap:.75rem;align-items:center;flex-wrap:wrap;margin-bottom:1.2rem}
     .yr-controls select{background:var(--bg-c2);border:1px solid var(--border-lt);border-radius:6px;padding:.45rem .75rem;color:var(--text);font-family:'Sarabun',sans-serif;font-size:.85rem}
@@ -407,6 +440,16 @@
       </div>
     </div>
     <div class="pred-grid" id="pred-cards"></div>
+    <div class="card fade" id="chart-card">
+      <div class="card-title">◈ สรุปตัวเลขแนะนำ — แยกตามปัจจัย (คลิกแต่ละแท่งเพื่อดูที่มา)</div>
+      <div class="chart-toggle">
+        <button class="ctg active" data-ct="b2" onclick="renderFactorChart('b2')">เลขท้าย 2 ตัว</button>
+        <button class="ctg" data-ct="b3" onclick="renderFactorChart('b3')">เลขท้าย 3 ตัว</button>
+      </div>
+      <div id="factor-legend" class="factor-legend"></div>
+      <div id="factor-chart" class="factor-chart"></div>
+      <div id="factor-detail" class="factor-detail"></div>
+    </div>
     <div class="g2">
       <div class="card fade">
         <div class="card-title">◈ ตัวเลือกสำรอง — เลขท้าย 2 ตัว (Top 5)</div>
@@ -774,80 +817,179 @@ function renderYearCompare() {
     makeCard(y1, f1, r1, maxF1) + makeCard(y2, f2, r2, maxF2);
 }
 
-/* ── Prediction engine ─────────────── */
-/* Recency weighting: งวดล่าสุดมีน้ำหนักมากกว่างวดเก่า (half-life ≈ 23 งวด ≈ 1 ปี)
-   ทำให้คำทำนายสะท้อนแนวโน้มปัจจุบัน และขยับทุกครั้งที่อัปเดตผลใหม่ */
+/* ── Prediction engine (multi-factor) ─────────────
+   4 ปัจจัย — ทุกตัวอิง "เลขที่ออกจริง" ในมุมมอง/ช่วงเวลาต่างกัน จึงเปลี่ยนตามข้อมูล
+   และไม่ไปติดเลขที่แทบไม่เคยออก (เลิกใช้ปัจจัย "ช่วงห่าง" ที่เป็น gambler's fallacy
+   เพราะมันให้คะแนนเลขหายากที่สุดเสมอ ทำให้คำทำนายค้าง):
+   1) ความถี่    (recency-weighted ทั้งหมด) ภาพรวมระยะยาว เน้นงวดล่าสุด
+   2) ตามเดือน   เฉพาะงวดเดือนเดียวกันข้ามปี — เปลี่ยนตามเดือนของงวดถัดไป
+   3) มาแรง      ความถี่ใน ~20 งวดล่าสุด (โมเมนตัมระยะสั้น)
+   4) แนวโน้มปี  ปีล่าสุดถี่ขึ้น/ลดลงเทียบค่าเฉลี่ยอดีต                          */
 const REC_DECAY = 0.97;
+const FW = { f:0.30, m:0.30, h:0.20, y:0.20 };  // น้ำหนักปัจจัย (รวม = 1.0)
+const FMETA = [
+  { k:'f', label:'ความถี่',   color:'#C9A84C' },
+  { k:'m', label:'ตามเดือน',  color:'#6FA8DC' },
+  { k:'h', label:'มาแรง',     color:'#E07840' },
+  { k:'y', label:'แนวโน้มปี', color:'#6FCF6F' },
+];
 function recWeight(idx, n) { return Math.pow(REC_DECAY, n - 1 - idx); }
-function totalWeight(n) { return (1 - Math.pow(REC_DECAY, n)) / (1 - REC_DECAY); }
-function posFreqMap(arr, len) {
-  const pf=Array.from({length:len},()=>({}));
-  const n=arr.length;
-  arr.forEach((s,idx)=>{
-    const w=recWeight(idx,n);
-    const p=s.toString().padStart(len,'0');
-    for(let i=0;i<len;i++) pf[i][p[i]]=(pf[i][p[i]]||0)+w;
+
+// weighted per-position digit frequency from items [{s, w}]
+function wPosFreq(items, len) {
+  const pf = Array.from({ length: len }, () => ({}));
+  let W = 0;
+  for (const { s, w } of items) { W += w; for (let i = 0; i < len; i++) pf[i][s[i]] = (pf[i][s[i]] || 0) + w; }
+  return { pf, W };
+}
+function posScore(cand, pf, W) {
+  if (W <= 0) return 0;
+  let f = 0; for (let i = 0; i < cand.length; i++) f += (pf[i][cand[i]] || 0) / W;
+  return f / cand.length;
+}
+
+/* records: งวดเรียงตามเวลา · pick(r): คืน array ของเลข · digits · targetMonth (1-12) */
+function predictDraw(records, pick, digits, targetMonth, topK = 5) {
+  const N = records.length;
+  if (N < 3) return [];
+  const lastYear = parseInt(records[N - 1].date.slice(6), 10);
+  const global = [], month = [], recentYr = [], histYr = [], seq = [];
+  records.forEach((r, idx) => {
+    const w  = recWeight(idx, N);
+    const mo = parseInt(r.date.split('/')[1], 10);
+    const yr = parseInt(r.date.slice(6), 10);
+    for (const raw of pick(r)) {
+      const s = raw.toString().padStart(digits, '0');
+      global.push({ s, w });
+      seq.push(s);
+      if (mo === targetMonth) month.push({ s, w });
+      if (yr >= lastYear - 1) recentYr.push({ s, w: 1 }); else histYr.push({ s, w: 1 });
+    }
   });
-  return pf;
+  const shortN = Math.min(seq.length, digits === 2 ? 40 : 60);  // ~20 งวดล่าสุด
+  const G = wPosFreq(global, digits);
+  const M = wPosFreq(month, digits);
+  const H = wPosFreq(seq.slice(-shortN).map(s => ({ s, w: 1 })), digits);
+  const RY = wPosFreq(recentYr, digits);
+  const HY = wPosFreq(histYr, digits);
+  const pool = Array.from({ length: Math.pow(10, digits) }, (_, i) => i.toString().padStart(digits, '0'));
+  const scored = pool.map(c => {
+    const fS = posScore(c, G.pf, G.W);
+    const mS = M.W > 0 ? posScore(c, M.pf, M.W) : fS;
+    const hS = H.W > 0 ? posScore(c, H.pf, H.W) : fS;
+    // แนวโน้มปี: ปีล่าสุดถี่กว่าค่าเฉลี่ยอดีต = กำลังมา (>.5), น้อยกว่า = ซาลง (<.5)
+    const ry = posScore(c, RY.pf, RY.W), hy = posScore(c, HY.pf, HY.W);
+    const yS = Math.max(0, Math.min(1, 0.5 + (ry - hy) * 4));
+    const score = fS * FW.f + mS * FW.m + hS * FW.h + yS * FW.y;
+    return { num: c, score, parts: { f: fS, m: mS, h: hS, y: yS } };
+  }).sort((a, b) => b.score - a.score).slice(0, topK);
+  return scored.map(x => ({
+    number: x.num,
+    confidence: Math.min(Math.round(40 + x.score * 60), 84),
+    score: x.score,
+    parts: x.parts,
+    // contribution ของแต่ละปัจจัย (weighted) สำหรับกราฟ
+    contrib: { f: x.parts.f * FW.f, m: x.parts.m * FW.m, h: x.parts.h * FW.h, y: x.parts.y * FW.y }
+  }));
 }
-function scoreNum(candidate, arr, pf, W) {
-  const len=candidate.length, n=arr.length;
-  let fScore=0;
-  for(let i=0;i<len;i++) fScore+=(pf[i][candidate[i]]||0)/W;
-  fScore/=len;
-  const li=arr.lastIndexOf(candidate);
-  const gScore=Math.min((li===-1?n+5:n-1-li)/(n+5),1);
-  const last5=arr.slice(-5).map(Number);
-  const med=[...last5].sort((a,b)=>a-b)[Math.floor(last5.length/2)];
-  const pScore=Math.max(0,1-Math.abs(Number(candidate)-med)/Math.pow(10,len)*5);
-  return fScore*0.40+gScore*0.30+pScore*0.30;
+function predictP1(records, targetMonth) {
+  const N = records.length;
+  const global = [], month = [];
+  records.forEach((r, idx) => {
+    const w = recWeight(idx, N), mo = parseInt(r.date.split('/')[1], 10);
+    const s = r.p1.toString().padStart(6, '0');
+    global.push({ s, w }); if (mo === targetMonth) month.push({ s, w });
+  });
+  const G = wPosFreq(global, 6), M = wPosFreq(month, 6);
+  let res = '', sum = 0;
+  for (let i = 0; i < 6; i++) {
+    let bd = '0', bv = -1;
+    for (const d of '0123456789') {
+      const g = (G.pf[i][d] || 0) / (G.W || 1), m = M.W > 0 ? (M.pf[i][d] || 0) / M.W : g;
+      const v = g * 0.6 + m * 0.4;
+      if (v > bv) { bv = v; bd = d; }
+    }
+    res += bd; sum += bv;
+  }
+  return { number: res, confidence: Math.round(34 + (sum / 6) * 28) };
 }
-function predict(arr, digits, topK=5) {
-  if(arr.length<3) return [];
-  const padded=arr.map(s=>s.toString().padStart(digits,'0'));
-  const pf=posFreqMap(padded,digits);
-  const W=totalWeight(padded.length);
-  const pool=Array.from({length:Math.pow(10,digits)},(_,i)=>i.toString().padStart(digits,'0'));
-  return pool.map(c=>({num:c,score:scoreNum(c,padded,pf,W)}))
-    .sort((a,b)=>b.score-a.score).slice(0,topK)
-    .map(x=>({number:x.num,confidence:Math.min(Math.round(38+x.score*42),80)}));
-}
-function predictP1(arr) {
-  const padded=arr.map(s=>s.toString().padStart(6,'0'));
-  const pf=posFreqMap(padded,6);
-  const W=totalWeight(padded.length);
-  let res='',sum=0;
-  for(let i=0;i<6;i++){const b=Object.entries(pf[i]).sort((a,b)=>b[1]-a[1])[0];res+=b?b[0]:'0';sum+=b?b[1]/W:0;}
-  return {number:res,confidence:Math.round(34+(sum/6)*28)};
-}
+let _b2L = [], _b3L = [], _chartWhich = 'b2';
 function renderPrediction() {
   const nd = calcNextDraw();
   const el = document.getElementById('next-draw-date');
   if (el) el.textContent = nd.be;
-  const s=sorted();
-  const b2L=predict(s.map(d=>d.b2),2,5);
-  const b3L=predict(s.flatMap(d=>d.b3),3,5);
-  const p1=predictP1(s.map(d=>d.p1));
-  const cards=[
-    {cls:'feat fade',type:'รางวัลที่ 1',sub:'6 หลัก',pred:p1,desc:'วิเคราะห์ความถี่แต่ละตำแหน่ง (464 งวด)',large:true},
-    {cls:'fade d1',type:'เลขท้าย 3 ตัว',sub:'แนะนำ',pred:b3L[0]||{number:'???',confidence:0},desc:'ความถี่ 40% + ช่วงห่าง 30% + Pattern 30%'},
-    {cls:'fade d2',type:'เลขท้าย 2 ตัว',sub:'แนะนำ',pred:b2L[0]||{number:'??',confidence:0},desc:'ความถี่ 40% + ช่วงห่าง 30% + Pattern 30%'},
+  const tm = parseInt(nd.ce.split('/')[1], 10);
+  const moName = ['','ม.ค.','ก.พ.','มี.ค.','เม.ย.','พ.ค.','มิ.ย.','ก.ค.','ส.ค.','ก.ย.','ต.ค.','พ.ย.','ธ.ค.'][tm];
+  const s = sorted();
+  const b2L = predictDraw(s, r => [r.b2], 2, tm, 5);
+  const b3L = predictDraw(s, r => r.b3, 3, tm, 5);
+  const p1  = predictP1(s, tm);
+  _b2L = b2L; _b3L = b3L;
+  const fmtParts = pred => pred.parts
+    ? FMETA.map(m => `<div class="bkd"><div class="bkd-v">${Math.round(pred.parts[m.k]*100)}%</div><div class="bkd-n" style="color:${m.color}">${m.label}</div></div>`).join('')
+    : '';
+  const cards = [
+    { cls:'feat fade', type:'รางวัลที่ 1', sub:'6 หลัก', pred:p1, desc:`ความถี่แต่ละตำแหน่ง + ตามเดือน (${s.length} งวด)`, large:true, p1:true },
+    { cls:'fade d1', type:'เลขท้าย 3 ตัว', sub:'แนะนำ', pred:b3L[0]||{number:'???',confidence:0}, desc:`โมเดล 4 ปัจจัย · งวด ${moName}` },
+    { cls:'fade d2', type:'เลขท้าย 2 ตัว', sub:'แนะนำ', pred:b2L[0]||{number:'??',confidence:0}, desc:`โมเดล 4 ปัจจัย · งวด ${moName}` },
   ];
-  document.getElementById('pred-cards').innerHTML=cards.map(c=>`
+  document.getElementById('pred-cards').innerHTML = cards.map(c => `
     <div class="pred-card ${c.cls}">
       <div class="pred-type">${c.type} <span style="color:var(--gold-dk)">— ${c.sub}</span></div>
       <div class="pred-num${c.large?'':' sm'}">${c.pred.number}</div>
       <div class="pred-desc">${c.desc}</div>
-      <div class="conf-row"><span class="conf-lbl">ความน่าจะเป็น</span><span class="conf-pct">${c.pred.confidence}%</span></div>
+      <div class="conf-row"><span class="conf-lbl">คะแนนรวม</span><span class="conf-pct">${c.pred.confidence}%</span></div>
       <div class="conf-bar"><div class="conf-fill" style="width:${c.pred.confidence}%"></div></div>
-      <div class="bkdwn">
-        <div class="bkd"><div class="bkd-v">40%</div><div class="bkd-n">ความถี่</div></div>
-        <div class="bkd"><div class="bkd-v">30%</div><div class="bkd-n">ช่วงห่าง</div></div>
-        <div class="bkd"><div class="bkd-v">30%</div><div class="bkd-n">Pattern</div></div>
-      </div>
+      ${c.p1 ? '' : `<div class="bkdwn bkdwn5">${fmtParts(c.pred)}</div>`}
     </div>`).join('');
-  document.getElementById('alt-b2').innerHTML=b2L.map((x,i)=>`<div class="sub-item"><div class="sub-num">${x.number}</div><div class="sub-pct">${x.confidence}% · #${i+1}</div></div>`).join('');
-  document.getElementById('alt-b3').innerHTML=b3L.map((x,i)=>`<div class="sub-item"><div class="sub-num">${x.number}</div><div class="sub-pct">${x.confidence}% · #${i+1}</div></div>`).join('');
+  document.getElementById('alt-b2').innerHTML = b2L.map((x,i)=>`<div class="sub-item"><div class="sub-num">${x.number}</div><div class="sub-pct">${x.confidence}% · #${i+1}</div></div>`).join('');
+  document.getElementById('alt-b3').innerHTML = b3L.map((x,i)=>`<div class="sub-item"><div class="sub-num">${x.number}</div><div class="sub-pct">${x.confidence}% · #${i+1}</div></div>`).join('');
+  renderFactorChart(_chartWhich);
+}
+
+/* กราฟ interactive — แท่งซ้อนแสดงสัดส่วนแต่ละปัจจัยของเลขแนะนำ */
+function renderFactorChart(which) {
+  _chartWhich = which;
+  const list = which === 'b3' ? _b3L : _b2L;
+  document.querySelectorAll('.ctg').forEach(b => b.classList.toggle('active', b.dataset.ct === which));
+  const legend = FMETA.map(m =>
+    `<span class="lg-item"><span class="lg-dot" style="background:${m.color}"></span>${m.label}</span>`).join('');
+  document.getElementById('factor-legend').innerHTML = legend;
+  if (!list.length) { document.getElementById('factor-chart').innerHTML = '<div class="fc-empty">ข้อมูลไม่พอ</div>'; return; }
+  const maxScore = Math.max(...list.map(x => x.score)) || 1;
+  document.getElementById('factor-chart').innerHTML = list.map((x, i) => {
+    const segs = FMETA.map(m => {
+      const wpct = (x.contrib[m.k] / maxScore) * 100;
+      return wpct > 0.3 ? `<div class="fseg" style="width:${wpct}%;background:${m.color}" title="${m.label}: ${Math.round(x.parts[m.k]*100)}%"></div>` : '';
+    }).join('');
+    return `
+      <div class="fc-row" onclick="showFactorDetail('${which}',${i})">
+        <div class="fc-rank">#${i+1}</div>
+        <div class="fc-num">${x.number}</div>
+        <div class="fc-track"><div class="fc-bar">${segs}</div></div>
+        <div class="fc-pct">${x.confidence}%</div>
+      </div>`;
+  }).join('');
+  showFactorDetail(which, 0);
+}
+function showFactorDetail(which, i) {
+  const list = which === 'b3' ? _b3L : _b2L;
+  const x = list[i]; if (!x) return;
+  document.querySelectorAll('.fc-row').forEach((r,idx)=>r.classList.toggle('sel', idx===i));
+  const rows = FMETA.map(m => {
+    const pct = Math.round(x.parts[m.k]*100);
+    const contribPct = Math.round((x.contrib[m.k]/x.score)*100);
+    return `
+      <div class="fd-row">
+        <span class="fd-lbl"><span class="lg-dot" style="background:${m.color}"></span>${m.label}</span>
+        <div class="fd-track"><div class="fd-fill" style="width:${pct}%;background:${m.color}"></div></div>
+        <span class="fd-val">${pct}%</span>
+        <span class="fd-contrib">มีผล ${contribPct}%</span>
+      </div>`;
+  }).join('');
+  document.getElementById('factor-detail').innerHTML = `
+    <div class="fd-head">เลข <strong>${x.number}</strong> — แยกที่มาของคะแนน (รวม ${x.confidence}%)</div>
+    ${rows}`;
 }
 
 /* ── Next Draw Calculator ─────────── */
